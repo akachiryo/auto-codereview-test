@@ -16,37 +16,67 @@ public class UserController {
     @Autowired
     private UserService userService;
     
-    // エラーハンドリングが不十分
+    /**
+     * Retrieves a list of all users.
+     *
+     * @return a list containing all user entities
+     */
     @GetMapping
     public List<User> getAllUsers() {
         return userService.getAllUsers();
     }
     
-    // パスワードを含むユーザー情報を返している（セキュリティ問題）
+    /**
+     * Retrieves user information by ID, including sensitive fields such as the password.
+     *
+     * @param id the unique identifier of the user to retrieve
+     * @return the user corresponding to the specified ID, including password information
+     */
     @GetMapping("/{id}")
     public User getUserById(@PathVariable Long id) {
         return userService.getUserById(id);
     }
     
-    // バリデーションが不十分
+    /**
+     * Creates a new user with the provided name, email, and password.
+     *
+     * @param user the user details from the request body
+     * @return the created user
+     */
     @PostMapping
     public User createUser(@RequestBody User user) {
         return userService.createUser(user.getName(), user.getEmail(), user.getPassword());
     }
     
-    // 部分更新ができない
+    /**
+     * Updates the name and email of a user identified by the given ID.
+     *
+     * @param id the ID of the user to update
+     * @param user the user object containing the new name and email
+     * @return the updated user
+     */
     @PutMapping("/{id}")
     public User updateUser(@PathVariable Long id, @RequestBody User user) {
         return userService.updateUser(id, user.getName(), user.getEmail());
     }
     
-    // エラーハンドリングなし
+    /**
+     * Deletes a user by their unique identifier.
+     *
+     * @param id the ID of the user to delete
+     */
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
     }
     
-    // 認証エンドポイント（セキュリティ問題多数）
+    /**
+     * Authenticates a user using the provided email and password.
+     *
+     * @param email the user's email address
+     * @param password the user's password
+     * @return the authenticated User object if credentials are valid; otherwise, returns null or an unauthenticated user
+     */
     @PostMapping("/login")
     public User login(@RequestParam String email, @RequestParam String password) {
         // パスワードがログに出力される可能性
@@ -54,25 +84,45 @@ public class UserController {
         return userService.authenticateUser(email, password);
     }
     
-    // 検索機能（SQLインジェクションの可能性）
+    /**
+     * Searches for users whose names match the specified value.
+     *
+     * @param name the name to search for
+     * @return a list of users matching the given name
+     */
     @GetMapping("/search")
     public List<User> searchUsers(@RequestParam String name) {
         return userService.searchUsers(name);
     }
     
-    // パスワード変更エンドポイント（セキュリティ問題）
+    /**
+     * Changes the password for the user with the specified ID.
+     *
+     * @param id the ID of the user whose password will be changed
+     * @param newPassword the new password to set for the user
+     * @return the updated User object after the password change
+     */
     @PostMapping("/{id}/change-password")
     public User changePassword(@PathVariable Long id, @RequestParam String newPassword) {
         return userService.changePassword(id, newPassword);
     }
     
-    // 管理者用エンドポイント（認可チェックなし）
+    /**
+     * Retrieves a list of all users for administrative purposes.
+     *
+     * @return a list of all users
+     */
     @GetMapping("/admin/all")
     public List<User> getAllUsersForAdmin() {
         return userService.getAllUsers();
     }
     
-    // CORS設定なし、HTTPメソッドの使い方が不適切
+    /**
+     * Deletes multiple users by their IDs and returns a summary message.
+     *
+     * @param ids the list of user IDs to delete
+     * @return a message indicating how many users were deleted
+     */
     @RequestMapping(value = "/bulk-delete", method = {RequestMethod.GET, RequestMethod.POST})
     public String bulkDelete(@RequestParam List<Long> ids) {
         for (Long id : ids) {
@@ -81,7 +131,12 @@ public class UserController {
         return "Deleted " + ids.size() + " users";
     }
     
-    // エラー情報を詳細に返しすぎる
+    /**
+     * Retrieves user details by ID for debugging purposes, returning detailed error information including stack traces if an exception occurs.
+     *
+     * @param id the ID of the user to retrieve
+     * @return a ResponseEntity containing the user details if found, a 404 response if not found, or detailed error information on failure
+     */
     @GetMapping("/debug/{id}")
     public ResponseEntity<?> debugUser(@PathVariable Long id) {
         try {

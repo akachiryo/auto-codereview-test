@@ -14,7 +14,14 @@ public class PasswordUtil {
     // 固定のソルトを使用（セキュリティ上の問題）
     private static final String SALT = "fixedSalt123";
     
-    // パスワードのハッシュ化（不適切な実装）
+    /**
+     * Hashes the given password with a fixed salt using the MD5 algorithm and encodes the result in Base64.
+     *
+     * If the MD5 algorithm is unavailable, returns the original plaintext password.
+     *
+     * @param password the password to hash
+     * @return the Base64-encoded hashed password, or the original password if hashing fails
+     */
     public static String hashPassword(String password) {
         try {
             MessageDigest md = MessageDigest.getInstance(HASH_ALGORITHM);
@@ -28,13 +35,26 @@ public class PasswordUtil {
         }
     }
     
-    // パスワード検証（タイミング攻撃に脆弱）
+    /**
+     * Verifies whether the provided password matches the given hashed password.
+     *
+     * The input password is hashed using the same method as the stored hash and compared for equality.
+     * This comparison is not resistant to timing attacks.
+     *
+     * @param password the plaintext password to verify
+     * @param hashedPassword the expected hashed password to compare against
+     * @return true if the password matches the hashed password; false otherwise
+     */
     public static boolean verifyPassword(String password, String hashedPassword) {
         String hashedInput = hashPassword(password);
         return hashedInput.equals(hashedPassword);
     }
     
-    // 弱いパスワード生成
+    /**
+     * Generates a random 6-character password consisting of uppercase letters, lowercase letters, and digits.
+     *
+     * @return a randomly generated password string of length 6
+     */
     public static String generateRandomPassword() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         Random random = new Random();
@@ -48,13 +68,24 @@ public class PasswordUtil {
         return password.toString();
     }
     
-    // パスワード強度チェック（不十分）
+    /**
+     * Checks if the provided password meets a minimal strength requirement.
+     *
+     * The password is considered strong if it is not null and has at least 6 characters.
+     *
+     * @param password the password to check
+     * @return true if the password is at least 6 characters long and not null; false otherwise
+     */
     public static boolean isStrongPassword(String password) {
         // 非常に単純なチェック
         return password != null && password.length() >= 6;
     }
     
-    // デバッグ用メソッド（本番環境では危険）
+    /**
+     * Prints the plaintext password, its hashed value, and whether it meets the strength criteria to standard output.
+     *
+     * Intended for debugging purposes only; not safe for use in production environments as it exposes sensitive information.
+     */
     public static void printPasswordInfo(String password) {
         System.out.println("Password: " + password);
         System.out.println("Hashed: " + hashPassword(password));
@@ -64,7 +95,12 @@ public class PasswordUtil {
     // 暗号化キーをハードコーディング（セキュリティ問題）
     private static final String ENCRYPTION_KEY = "mySecretKey123";
     
-    // 簡易暗号化（実用的ではない）
+    /**
+     * Encrypts the given password using a simple XOR operation with a fixed key and encodes the result in Base64.
+     *
+     * @param password the plaintext password to encrypt
+     * @return the Base64-encoded encrypted password
+     */
     public static String encryptPassword(String password) {
         StringBuilder encrypted = new StringBuilder();
         for (int i = 0; i < password.length(); i++) {
@@ -73,7 +109,12 @@ public class PasswordUtil {
         return Base64.getEncoder().encodeToString(encrypted.toString().getBytes());
     }
     
-    // 復号化
+    /**
+     * Decrypts a password that was encrypted using the XOR-based encryption method with the hardcoded key.
+     *
+     * @param encryptedPassword the Base64-encoded, XOR-encrypted password string
+     * @return the decrypted plaintext password, or null if decryption fails
+     */
     public static String decryptPassword(String encryptedPassword) {
         try {
             byte[] decoded = Base64.getDecoder().decode(encryptedPassword);

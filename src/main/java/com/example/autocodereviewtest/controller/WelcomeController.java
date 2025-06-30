@@ -10,6 +10,11 @@ import java.util.Map;
 @RestController
 public class WelcomeController {
     
+    /**
+     * Handles GET requests to the root path and returns application metadata, available API endpoints, and sample request examples.
+     *
+     * @return a map containing application information, a list of API endpoints with descriptions, and example curl commands.
+     */
     @GetMapping("/")
     public Map<String, Object> welcome() {
         Map<String, Object> response = new HashMap<>();
@@ -42,6 +47,11 @@ public class WelcomeController {
         return response;
     }
     
+    /**
+     * Handles HTTP GET requests to the /health endpoint and returns the application's health status.
+     *
+     * @return a map containing the status ("UP"), current timestamp, and application identifier.
+     */
     @GetMapping("/health")
     public Map<String, Object> health() {
         Map<String, Object> response = new HashMap<>();
