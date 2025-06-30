@@ -1,68 +1,9 @@
-review:
-  language: ja # 日本語でレビュー
-  focus_areas:
-    - security
-    - performance
-    - maintainability
-    - best_practices
-    - error_handling
-    - testing
-
-  custom_prompts:
-    beginner: |
-      このコードは未経験者が書いたものです。
-      あなたは熟練のプログラマーとして、以下のルールでレビューしてください：
-
-      【レビュールール】
-      - 必ず日本語でレビューコメントを記載する
-      - 修正後のコードは提示しない（指摘のみ行う）
-      - 修正方針や具体的な実装方法は示さない
-      - レビューイが自分で考えて学習できるよう問題点の指摘に留める
-      - なぜ問題なのかの理由は簡潔に説明する
-
-      【レビュー観点】
-      1. セキュリティ上の問題
-      2. パフォーマンスの問題
-      3. 保守性・可読性の問題
-      4. ベストプラクティス違反
-      5. 例外処理の不備
-      6. テスト品質の問題
-
-      【レビューコメント例】
-      ❌ 良くない例: BCryptを使用してパスワードをハッシュ化してください。以下のように修正できます
-      ✅ 良い例: パスワードを平文で保存することはセキュリティ上の重大な問題です。適切なハッシュ化を検討してください。
-
-      建設的で学習を促進するトーンでお願いします。
-
-  severity_levels:
-    - critical # セキュリティ、データ損失の可能性
-    - high # パフォーマンス、保守性の重大な問題
-    - medium # ベストプラクティス違反
-    - low # コードスタイル、軽微な改善点
-
-exclude_patterns:
-  - "*.lock"
-  - "target/"
-  - "build/"
-  - ".mvn/"
-  - "*.log"
-  - "*.tmp"
-
-include_patterns:
-  - "src/**/*.java"
-  - "*.xml"
-  - "*.properties"
-  - "*.yml"
-  - "*.yaml"
-
-file_size_limit: 10000 # 10KB以下のファイルのみレビュー対象
-
-review_triggers:
-  - pull_request
-  - push_to_main
-  - manual_request
-
-notification_settings:
-  mention_reviewers: true
-  create_issues_for_critical: true
-  summary_comment: true
+have_fun: true
+code_review:
+  disable: false
+  comment_severity_threshold: MEDIUM
+  max_review_comments: -1
+  pull_request_opened:
+    help: false
+    summary: true
+    code_review: true
