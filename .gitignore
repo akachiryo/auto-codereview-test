@@ -58,4 +58,3 @@ logs/
 *.rar 
 
 # NOTE: このファイルはGeminiの設定ファイルです。
-.gemini/config.yml
