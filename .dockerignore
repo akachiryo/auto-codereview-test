@@ -1,0 +1,38 @@
+# Maven
+target/
+.mvn/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation
+README.md
+*.md
+
+# Temporary files
+*.tmp
+*.temp
+
+# Test files (optional - コメントアウトしてテストを含める場合)
+# src/test/ 
