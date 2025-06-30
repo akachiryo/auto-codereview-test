@@ -1,0 +1,56 @@
+review:
+  language: ja # 日本語でレビュー
+  focus_areas:
+    - security
+    - performance
+    - maintainability
+    - best_practices
+    - error_handling
+    - testing
+
+  custom_prompts:
+    beginner: |
+      このコードは未経験者が書いたものです。
+      学習に役立つよう、以下の観点でレビューしてください：
+      1. 基本的なベストプラクティス
+      2. よくある間違いパターン
+      3. 改善方法の具体例
+      4. 学習のポイント
+      5. セキュリティ上の問題
+      6. パフォーマンスの改善点
+
+      建設的で優しいトーンでフィードバックをお願いします。
+      可能であれば、改善されたコード例も提示してください。
+
+  severity_levels:
+    - critical # セキュリティ、データ損失の可能性
+    - high # パフォーマンス、保守性の重大な問題
+    - medium # ベストプラクティス違反
+    - low # コードスタイル、軽微な改善点
+
+exclude_patterns:
+  - "*.lock"
+  - "target/"
+  - "build/"
+  - ".mvn/"
+  - "*.log"
+  - "*.tmp"
+
+include_patterns:
+  - "src/**/*.java"
+  - "*.xml"
+  - "*.properties"
+  - "*.yml"
+  - "*.yaml"
+
+file_size_limit: 10000 # 10KB以下のファイルのみレビュー対象
+
+review_triggers:
+  - pull_request
+  - push_to_main
+  - manual_request
+
+notification_settings:
+  mention_reviewers: true
+  create_issues_for_critical: true
+  summary_comment: true
