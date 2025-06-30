@@ -1,0 +1,58 @@
+# Gemini Code Assist 設定ファイル
+# 公式ドキュメント: https://developers.google.com/gemini-code-assist/docs/customize-gemini-behavior-github
+
+# 楽しい機能の有効/無効
+# true: PRサマリーに詩を含む、親しみやすいトーン
+# false: よりフォーマルで業務的なレビュー
+# デフォルト: true
+have_fun: false
+
+code_review:
+  # コードレビュー機能の有効/無効
+  # false: レビュー機能を有効にする
+  # true: レビュー機能を完全に無効にする
+  # デフォルト: false
+  disable: false
+
+  # レビューコメントの最小重要度
+  # LOW: 軽微な問題も含めてすべてコメント
+  # MEDIUM: 中程度以上の問題のみコメント
+  # HIGH: 重要な問題のみコメント
+  # CRITICAL: 致命的な問題のみコメント
+  # デフォルト: MEDIUM
+  comment_severity_threshold: MEDIUM
+
+  # レビューコメントの最大数
+  # -1: 無制限（すべての問題を指摘）
+  # 正の整数: 指定した数まで制限
+  # デフォルト: -1
+  max_review_comments: -1
+
+  # プルリクエスト作成時の動作設定
+  pull_request_opened:
+    # ヘルプメッセージの表示
+    # true: PR作成時にヘルプメッセージを投稿
+    # false: ヘルプメッセージを投稿しない
+    # デフォルト: false
+    help: false
+
+    # サマリーコメントの表示
+    # true: PR作成時にサマリーコメントを投稿
+    # false: サマリーコメントを投稿しない
+    # デフォルト: true
+    summary: false
+
+    # コードレビューの実行
+    # true: PR作成時にコードレビューを実行
+    # false: コードレビューを実行しない
+    # デフォルト: true
+    code_review: true
+
+# ファイル除外パターン（glob パターンで指定）
+# 指定したパターンにマッチするファイル/ディレクトリはレビュー対象外
+# 参考: https://developers.google.com/gemini-code-assist/docs/exclude-files
+ignore_patterns:
+  - "target/" # Mavenビルド成果物ディレクトリ
+  - "*.log" # ログファイル
+  - "*.tmp" # 一時ファイル
+  - ".mvn/" # Maven Wrapperディレクトリ
