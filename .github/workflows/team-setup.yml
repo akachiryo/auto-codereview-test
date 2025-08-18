@@ -1,0 +1,233 @@
+name: 🚀 Team Development Environment Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      setup_components:
+        description: 'Components to setup'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - issues
+        - wiki
+        - discussions
+        - projects
+      csv_file:
+        description: 'CSV file path (relative to setup-tools/)'
+        required: false
+        default: 'data/sample-tasks.csv'
+      dry_run:
+        description: 'Dry run (preview changes without applying)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  setup-environment:
+    runs-on: ubuntu-latest
+    name: Setup Team Development Environment
+    
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        cache: 'pip'
+    
+    - name: 📦 Install dependencies
+      run: |
+        pip install -r setup-tools/requirements.txt
+    
+    - name: 🔧 Setup environment variables
+      run: |
+        echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> setup-tools/.env
+        echo "GITHUB_REPO=${{ github.repository }}" >> setup-tools/.env
+        echo "CSV_FILE=${{ github.event.inputs.csv_file }}" >> setup-tools/.env
+    
+    - name: 🎯 Setup Issues (Issues Only)
+      if: github.event.inputs.setup_components == 'issues'
+      run: |
+        cd setup-tools
+        python scripts/csv-to-issues.py \
+          --repo "${{ github.repository }}" \
+          --token "${{ secrets.GITHUB_TOKEN }}" \
+          --csv "${{ github.event.inputs.csv_file }}" \
+          ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
+    
+    - name: 📚 Setup Wiki (Wiki Only)
+      if: github.event.inputs.setup_components == 'wiki'
+      run: |
+        cd setup-tools
+        python scripts/create-wiki.py \
+          --repo "${{ github.repository }}" \
+          --token "${{ secrets.GITHUB_TOKEN }}"
+    
+    - name: 💬 Setup Discussions (Discussions Only)
+      if: github.event.inputs.setup_components == 'discussions'
+      run: |
+        cd setup-tools
+        python scripts/create-discussions.py \
+          --repo "${{ github.repository }}" \
+          --token "${{ secrets.GITHUB_TOKEN }}"
+    
+    - name: 📊 Setup Projects (Projects Only)
+      if: github.event.inputs.setup_components == 'projects'
+      run: |
+        cd setup-tools
+        python scripts/setup-projects.py \
+          --repo "${{ github.repository }}" \
+          --token "${{ secrets.GITHUB_TOKEN }}" \
+          --boards all
+    
+    - name: 🚀 Setup All Components
+      if: github.event.inputs.setup_components == 'all'
+      run: |
+        cd setup-tools
+        ./scripts/setup.sh \
+          --repo "${{ github.repository }}" \
+          --token "${{ secrets.GITHUB_TOKEN }}" \
+          --csv "${{ github.event.inputs.csv_file }}" \
+          ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
+    
+    - name: 📋 Create Setup Summary
+      if: always()
+      run: |
+        echo "## 🚀 Team Development Environment Setup Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Setup Configuration" >> $GITHUB_STEP_SUMMARY
+        echo "- **Repository**: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Components**: ${{ github.event.inputs.setup_components }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **CSV File**: ${{ github.event.inputs.csv_file }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Dry Run**: ${{ github.event.inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Quick Links" >> $GITHUB_STEP_SUMMARY
+        echo "- 🎯 [Issues](https://github.com/${{ github.repository }}/issues)" >> $GITHUB_STEP_SUMMARY
+        echo "- 📚 [Wiki](https://github.com/${{ github.repository }}/wiki)" >> $GITHUB_STEP_SUMMARY
+        echo "- 💬 [Discussions](https://github.com/${{ github.repository }}/discussions)" >> $GITHUB_STEP_SUMMARY
+        echo "- 📊 [Projects](https://github.com/${{ github.repository }}/projects)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+        echo "1. Review created Issues and assign to team members" >> $GITHUB_STEP_SUMMARY
+        echo "2. Customize Wiki pages with your project-specific information" >> $GITHUB_STEP_SUMMARY
+        echo "3. Start discussions for team collaboration" >> $GITHUB_STEP_SUMMARY
+        echo "4. Configure project boards and start tracking work" >> $GITHUB_STEP_SUMMARY
+
+  notify-completion:
+    runs-on: ubuntu-latest
+    needs: setup-environment
+    if: always()
+    
+    steps:
+    - name: 📢 Create Issue for Setup Completion
+      if: needs.setup-environment.result == 'success' && github.event.inputs.dry_run != 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const title = '🎉 Team Development Environment Setup Completed';
+          const body = `
+          ## Setup Completion Report
+          
+          The team development environment has been successfully configured! 🚀
+          
+          ### What was created:
+          - ✅ **Issues**: Imported from CSV data
+          - ✅ **Wiki**: Project documentation templates
+          - ✅ **Discussions**: Team communication templates
+          - ✅ **Projects**: Task management boards
+          
+          ### Quick Access Links:
+          - 🎯 [View Issues](https://github.com/${context.repo.owner}/${context.repo.repo}/issues)
+          - 📚 [Browse Wiki](https://github.com/${context.repo.owner}/${context.repo.repo}/wiki)
+          - 💬 [Join Discussions](https://github.com/${context.repo.owner}/${context.repo.repo}/discussions)
+          - 📊 [Manage Projects](https://github.com/${context.repo.owner}/${context.repo.repo}/projects)
+          
+          ### Next Steps for Team:
+          1. **Review Issues**: Check imported tasks and assign team members
+          2. **Update Wiki**: Customize documentation with project-specific details
+          3. **Start Discussions**: Begin team conversations and planning
+          4. **Configure Projects**: Set up automation rules and customize boards
+          5. **Invite Collaborators**: Add team members to the repository
+          
+          ### Need Help?
+          - Check the \`setup-tools/\` directory for scripts and templates
+          - Review \`setup-tools/README.md\` for detailed usage instructions
+          - Modify CSV data in \`setup-tools/data/sample-tasks.csv\` for custom tasks
+          
+          **Setup completed at**: ${new Date().toISOString()}
+          **Workflow run**: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}
+          `;
+          
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            labels: ['setup', 'documentation']
+          });
+    
+    - name: ❌ Create Issue for Setup Failure
+      if: needs.setup-environment.result == 'failure'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const title = '⚠️ Team Development Environment Setup Failed';
+          const body = `
+          ## Setup Failure Report
+          
+          The team development environment setup encountered errors. 😞
+          
+          ### Troubleshooting Steps:
+          1. **Check Permissions**: Ensure the GitHub token has required permissions:
+             - \`repo\` (full repository access)
+             - \`write:discussion\` (create/edit discussions)  
+             - \`project\` (create/edit projects)
+          
+          2. **Verify Token**: Make sure \`GITHUB_TOKEN\` secret is properly configured
+          
+          3. **Check CSV Format**: Verify CSV file format matches expected structure
+          
+          4. **Review Logs**: Check the workflow logs for specific error messages
+          
+          ### Required Permissions:
+          The setup process requires the following GitHub API permissions:
+          - Repository Issues (create, read, write)
+          - Repository Wiki (create, read, write)  
+          - Repository Discussions (create, read, write)
+          - Repository Projects (create, read, write)
+          
+          ### Manual Setup:
+          If the automated setup continues to fail, you can run the scripts manually:
+          
+          \`\`\`bash
+          cd setup-tools
+          
+          # Install dependencies
+          pip install -r requirements.txt
+          
+          # Set environment variables
+          export GITHUB_TOKEN="your-token-here"
+          export GITHUB_REPO="${context.repo.owner}/${context.repo.repo}"
+          
+          # Run setup
+          ./scripts/setup.sh --dry-run  # Preview first
+          ./scripts/setup.sh            # Then apply changes
+          \`\`\`
+          
+          **Failure occurred at**: ${new Date().toISOString()}
+          **Workflow run**: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}
+          
+          Please review the workflow logs and try again, or reach out for support.
+          `;
+          
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            labels: ['bug', 'setup', 'help-wanted']
+          });
