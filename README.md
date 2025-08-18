@@ -29,19 +29,43 @@
 - 💬 **GitHub Discussions** (議事録テンプレート・チーム会話)
 - 📊 **GitHub Projects** (タスクボード・テストボード)
 
-### 必要な準備
+### 🔑 必須: GitHub Tokenの設定
 
-1. **GitHub Tokenの設定**
-   ```bash
-   # Repository Settings > Secrets and variables > Actions
-   # GITHUB_TOKEN を設定（スコープ: repo, write:discussion, project）
-   ```
+**⚠️ この設定がないと実行できません！** 
 
-2. **CSVデータの配置**
-   ```bash
-   # setup-tools/data/sample-tasks.csv を編集
-   # Backlogからエクスポートしたデータを配置
-   ```
+📖 **詳細手順**: [SETUP_GUIDE.md](SETUP_GUIDE.md) を参照
+
+#### 1. Personal Access Tokenの作成
+1. GitHub右上のプロフィール → **Settings**
+2. 左サイドバー最下部の **Developer settings**
+3. **Personal access tokens** → **Tokens (classic)**
+4. **Generate new token (classic)** をクリック
+5. **Note**: `チーム開発環境セットアップ用`
+6. **Expiration**: `90 days` (お好みで調整)
+7. **スコープ選択** (以下を全てチェック):
+   - ✅ `repo` (Full control of private repositories)
+   - ✅ `write:discussion` (Write discussions)  
+   - ✅ `project` (Full control of organization projects)
+   - ✅ `admin:repo_hook` (Full control of repository hooks)
+8. **Generate token** をクリック
+9. **🚨 重要**: 表示されたトークンを必ずコピー保存
+
+#### 2. Repository Secretへの設定
+1. このリポジトリの **Settings** タブ
+2. 左サイドバーの **Secrets and variables** → **Actions**
+3. **New repository secret** をクリック
+4. **Name**: `GITHUB_TOKEN`
+5. **Secret**: 手順1でコピーしたトークンを貼り付け
+6. **Add secret** をクリック
+
+#### 3. CSVデータの配置（オプション）
+```bash
+# setup-tools/data/sample-tasks.csv を編集
+# Backlogからエクスポートしたデータを配置
+```
+
+### ✅ 設定確認方法
+- Repository Settings > Secrets に `GITHUB_TOKEN` が表示されていればOK
 
 ### 手動セットアップ（オプション）
 
