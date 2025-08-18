@@ -628,9 +628,9 @@ def main():
         print("❌ Error: Repository name required. Use --repo or set GITHUB_REPO")
         sys.exit(1)
     
-    token = args.token or os.getenv('GITHUB_TOKEN')
+    token = args.token or os.getenv('TEAM_SETUP_TOKEN')
     if not token:
-        print("❌ Error: GitHub token required. Use --token or set GITHUB_TOKEN")
+        print("❌ Error: GitHub token required. Use --token or set TEAM_SETUP_TOKEN")
         sys.exit(1)
     
     print(f"🚀 Setting up Wiki for {repo_name}...")

@@ -45,7 +45,7 @@ jobs:
     
     - name: 🔧 Setup environment variables
       run: |
-        echo "GITHUB_TOKEN=${{ secrets.TEAM_SETUP_TOKEN }}" >> setup-tools/.env
+        echo "TEAM_SETUP_TOKEN=${{ secrets.TEAM_SETUP_TOKEN }}" >> setup-tools/.env
         echo "GITHUB_REPO=${{ github.repository }}" >> setup-tools/.env
         echo "CSV_FILE=${{ github.event.inputs.csv_file }}" >> setup-tools/.env
     
@@ -189,7 +189,7 @@ jobs:
              - \`write:discussion\` (create/edit discussions)  
              - \`project\` (create/edit projects)
           
-          2. **Verify Token**: Make sure \`GITHUB_TOKEN\` secret is properly configured
+          2. **Verify Token**: Make sure \`TEAM_SETUP_TOKEN\` secret is properly configured
           
           3. **Check CSV Format**: Verify CSV file format matches expected structure
           
@@ -212,7 +212,7 @@ jobs:
           pip install -r requirements.txt
           
           # Set environment variables
-          export GITHUB_TOKEN="your-token-here"
+          export TEAM_SETUP_TOKEN="your-token-here"
           export GITHUB_REPO="${context.repo.owner}/${context.repo.repo}"
           
           # Run setup

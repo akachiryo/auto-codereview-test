@@ -192,7 +192,7 @@ def run_all_tests():
     if passed == total:
         print("🎉 All tests passed! The setup system is ready to use.")
         print("\n📋 Next steps:")
-        print("1. Set GITHUB_TOKEN and GITHUB_REPO environment variables")
+        print("1. Set TEAM_SETUP_TOKEN and GITHUB_REPO environment variables")
         print("2. Run: ./setup-tools/scripts/setup.sh --dry-run")
         print("3. If dry run looks good, run: ./setup-tools/scripts/setup.sh")
         print("4. Or use the GitHub Actions workflow for one-click setup")

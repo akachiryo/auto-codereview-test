@@ -47,7 +47,7 @@ print_usage() {
     echo "  -h, --help              Show this help message"
     echo ""
     echo "Environment Variables:"
-    echo "  GITHUB_TOKEN           GitHub personal access token"
+    echo "  TEAM_SETUP_TOKEN       GitHub personal access token"
     echo "  GITHUB_REPO            Repository name (owner/repo)"
     echo ""
     echo "Examples:"
@@ -85,19 +85,16 @@ check_dependencies() {
 check_environment() {
     echo -e "${YELLOW}🔧 Checking environment...${NC}"
     
-    # Check GITHUB_TOKEN or TEAM_SETUP_TOKEN
-    if [ -z "$GITHUB_TOKEN" ] && [ -z "$TEAM_SETUP_TOKEN" ]; then
-        echo -e "${RED}❌ GITHUB_TOKEN or TEAM_SETUP_TOKEN environment variable is required${NC}"
+    # Check TEAM_SETUP_TOKEN
+    if [ -z "$TEAM_SETUP_TOKEN" ]; then
+        echo -e "${RED}❌ TEAM_SETUP_TOKEN environment variable is required${NC}"
         echo "   Get a token from: https://github.com/settings/tokens"
         echo "   Required scopes: repo, write:discussion, project"
         exit 1
     fi
     
-    # Use TEAM_SETUP_TOKEN if available, otherwise fallback to GITHUB_TOKEN
-    if [ -n "$TEAM_SETUP_TOKEN" ]; then
-        GITHUB_TOKEN="$TEAM_SETUP_TOKEN"
-        export GITHUB_TOKEN
-    fi
+    TOKEN="$TEAM_SETUP_TOKEN"
+    export TOKEN
     
     if [ -z "$GITHUB_REPO" ]; then
         echo -e "${RED}❌ GITHUB_REPO environment variable is required${NC}"
@@ -107,7 +104,7 @@ check_environment() {
     
     echo -e "${GREEN}  ✅ Environment configured${NC}"
     echo "     Repository: $GITHUB_REPO"
-    echo "     Token: ${GITHUB_TOKEN:0:10}..."
+    echo "     Token: ${TOKEN:0:10}..."
 }
 
 setup_issues() {
@@ -116,7 +113,7 @@ setup_issues() {
     python3 "$SCRIPT_DIR/csv-to-issues.py" \
         --csv "$CSV_FILE" \
         --repo "$GITHUB_REPO" \
-        --token "$GITHUB_TOKEN" \
+        --token "$TOKEN" \
         $([ "$DRY_RUN" = true ] && echo "--dry-run")
     
     echo -e "${GREEN}✅ Issues setup completed${NC}"
@@ -127,7 +124,7 @@ setup_wiki() {
     
     python3 "$SCRIPT_DIR/create-wiki.py" \
         --repo "$GITHUB_REPO" \
-        --token "$GITHUB_TOKEN" \
+        --token "$TOKEN" \
         --retry-count 3
     
     if [ $? -eq 0 ]; then
@@ -142,7 +139,7 @@ setup_discussions() {
     
     python3 "$SCRIPT_DIR/create-discussions.py" \
         --repo "$GITHUB_REPO" \
-        --token "$GITHUB_TOKEN"
+        --token "$TOKEN"
     
     echo -e "${GREEN}✅ Discussions setup completed${NC}"
 }
@@ -152,7 +149,7 @@ setup_projects() {
     
     python3 "$SCRIPT_DIR/setup-projects.py" \
         --repo "$GITHUB_REPO" \
-        --token "$GITHUB_TOKEN" \
+        --token "$TOKEN" \
         --boards all \
         --retry-count 3
     
@@ -168,7 +165,7 @@ create_env_file() {
         echo -e "${YELLOW}📝 Creating .env file...${NC}"
         cat > "$ROOT_DIR/.env" << EOF
 # GitHub Configuration
-GITHUB_TOKEN=$GITHUB_TOKEN
+TEAM_SETUP_TOKEN=$TEAM_SETUP_TOKEN
 GITHUB_REPO=$GITHUB_REPO
 
 # Optional: GitHub API Base URL (for GitHub Enterprise)
@@ -208,7 +205,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         -t|--token)
-            GITHUB_TOKEN="$2"
+            TEAM_SETUP_TOKEN="$2"
             shift 2
             ;;
         -c|--csv)
@@ -256,7 +253,7 @@ main() {
     print_header
     
     # Export environment variables for Python scripts
-    export GITHUB_TOKEN
+    export TEAM_SETUP_TOKEN
     export GITHUB_REPO
     
     if [ "$DRY_RUN" = true ]; then
