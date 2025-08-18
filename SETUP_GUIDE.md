@@ -42,12 +42,12 @@ BacklogとGoogleスプレッドシートを使った従来のチーム開発か�
 1. リポジトリの **Settings** タブ
 2. 左サイドバー **Secrets and variables** → **Actions**  
 3. **New repository secret** をクリック
-4. **Name**: `GITHUB_TOKEN`
+4. **Name**: `TEAM_SETUP_TOKEN` ⚠️ **重要: GITHUB_TOKENは予約語のため使用不可**
 5. **Secret**: 作成したTokenを貼り付け
 6. **Add secret** をクリック
 
 #### 設定確認
-- Settings > Secrets で `GITHUB_TOKEN` が表示されていればOK ✅
+- Settings > Secrets で `TEAM_SETUP_TOKEN` が表示されていればOK ✅
 
 ### 3. 📊 BacklogデータのCSV準備（オプション）
 
@@ -94,7 +94,7 @@ git clone https://github.com/your-org/your-repo.git
 cd your-repo
 
 # 2. 環境変数設定
-export GITHUB_TOKEN="your_token_here"
+export TEAM_SETUP_TOKEN="your_token_here"  # または GITHUB_TOKEN
 export GITHUB_REPO="owner/repo-name"
 
 # 3. 実行

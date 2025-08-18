@@ -54,7 +54,7 @@
 1. このリポジトリの **Settings** タブ
 2. 左サイドバーの **Secrets and variables** → **Actions**
 3. **New repository secret** をクリック
-4. **Name**: `GITHUB_TOKEN`
+4. **Name**: `TEAM_SETUP_TOKEN` ⚠️ **重要: GITHUB_TOKENは使用不可**
 5. **Secret**: 手順1でコピーしたトークンを貼り付け
 6. **Add secret** をクリック
 
@@ -65,7 +65,7 @@
 ```
 
 ### ✅ 設定確認方法
-- Repository Settings > Secrets に `GITHUB_TOKEN` が表示されていればOK
+- Repository Settings > Secrets に `TEAM_SETUP_TOKEN` が表示されていればOK
 
 ### 手動セットアップ（オプション）
 
@@ -74,6 +74,11 @@ cd setup-tools
 
 # テスト実行（推奨）
 ./scripts/quick-test.py
+
+# 環境変数設定（手動実行時のみ）
+export GITHUB_TOKEN="your_token_here"  # または
+export TEAM_SETUP_TOKEN="your_token_here"
+export GITHUB_REPO="owner/repo-name"
 
 # セットアップ実行
 ./scripts/setup.sh --dry-run  # プレビュー

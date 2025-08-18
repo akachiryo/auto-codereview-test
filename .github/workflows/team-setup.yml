@@ -45,7 +45,7 @@ jobs:
     
     - name: 🔧 Setup environment variables
       run: |
-        echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> setup-tools/.env
+        echo "GITHUB_TOKEN=${{ secrets.TEAM_SETUP_TOKEN }}" >> setup-tools/.env
         echo "GITHUB_REPO=${{ github.repository }}" >> setup-tools/.env
         echo "CSV_FILE=${{ github.event.inputs.csv_file }}" >> setup-tools/.env
     
@@ -55,7 +55,7 @@ jobs:
         cd setup-tools
         python scripts/csv-to-issues.py \
           --repo "${{ github.repository }}" \
-          --token "${{ secrets.GITHUB_TOKEN }}" \
+          --token "${{ secrets.TEAM_SETUP_TOKEN }}" \
           --csv "${{ github.event.inputs.csv_file }}" \
           ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
     
@@ -65,7 +65,7 @@ jobs:
         cd setup-tools
         python scripts/create-wiki.py \
           --repo "${{ github.repository }}" \
-          --token "${{ secrets.GITHUB_TOKEN }}" \
+          --token "${{ secrets.TEAM_SETUP_TOKEN }}" \
           --retry-count 3
     
     - name: 💬 Setup Discussions (Discussions Only)
@@ -74,7 +74,7 @@ jobs:
         cd setup-tools
         python scripts/create-discussions.py \
           --repo "${{ github.repository }}" \
-          --token "${{ secrets.GITHUB_TOKEN }}"
+          --token "${{ secrets.TEAM_SETUP_TOKEN }}"
     
     - name: 📊 Setup Projects (Projects Only)
       if: github.event.inputs.setup_components == 'projects'
@@ -82,7 +82,7 @@ jobs:
         cd setup-tools
         python scripts/setup-projects.py \
           --repo "${{ github.repository }}" \
-          --token "${{ secrets.GITHUB_TOKEN }}" \
+          --token "${{ secrets.TEAM_SETUP_TOKEN }}" \
           --boards all \
           --retry-count 3
     
@@ -92,7 +92,7 @@ jobs:
         cd setup-tools
         ./scripts/setup.sh \
           --repo "${{ github.repository }}" \
-          --token "${{ secrets.GITHUB_TOKEN }}" \
+          --token "${{ secrets.TEAM_SETUP_TOKEN }}" \
           --csv "${{ github.event.inputs.csv_file }}" \
           ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
     

@@ -85,11 +85,18 @@ check_dependencies() {
 check_environment() {
     echo -e "${YELLOW}🔧 Checking environment...${NC}"
     
-    if [ -z "$GITHUB_TOKEN" ]; then
-        echo -e "${RED}❌ GITHUB_TOKEN environment variable is required${NC}"
+    # Check GITHUB_TOKEN or TEAM_SETUP_TOKEN
+    if [ -z "$GITHUB_TOKEN" ] && [ -z "$TEAM_SETUP_TOKEN" ]; then
+        echo -e "${RED}❌ GITHUB_TOKEN or TEAM_SETUP_TOKEN environment variable is required${NC}"
         echo "   Get a token from: https://github.com/settings/tokens"
         echo "   Required scopes: repo, write:discussion, project"
         exit 1
+    fi
+    
+    # Use TEAM_SETUP_TOKEN if available, otherwise fallback to GITHUB_TOKEN
+    if [ -n "$TEAM_SETUP_TOKEN" ]; then
+        GITHUB_TOKEN="$TEAM_SETUP_TOKEN"
+        export GITHUB_TOKEN
     fi
     
     if [ -z "$GITHUB_REPO" ]; then
