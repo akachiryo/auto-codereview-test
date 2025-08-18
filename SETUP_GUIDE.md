@@ -42,7 +42,7 @@ BacklogとGoogleスプレッドシートを使った従来のチーム開発か�
 1. リポジトリの **Settings** タブ
 2. 左サイドバー **Secrets and variables** → **Actions**  
 3. **New repository secret** をクリック
-4. **Name**: `TEAM_SETUP_TOKEN` ⚠️ **重要: GITHUB_TOKENは予約語のため使用不可**
+4. **Name**: `TEAM_SETUP_TOKEN`
 5. **Secret**: 作成したTokenを貼り付け
 6. **Add secret** をクリック
 
@@ -94,7 +94,7 @@ git clone https://github.com/your-org/your-repo.git
 cd your-repo
 
 # 2. 環境変数設定
-export TEAM_SETUP_TOKEN="your_token_here"  # または GITHUB_TOKEN
+export TEAM_SETUP_TOKEN="your_token_here"
 export GITHUB_REPO="owner/repo-name"
 
 # 3. 実行
@@ -182,13 +182,13 @@ Error: CSV file not found
 #### 一部のコンポーネントのみ再実行
 ```bash
 # Wikiのみ再作成
-python setup-tools/scripts/create-wiki.py --repo owner/repo --token $GITHUB_TOKEN
+python setup-tools/scripts/create-wiki.py --repo owner/repo --token $TEAM_SETUP_TOKEN
 
 # Projectsのみ再作成  
-python setup-tools/scripts/setup-projects.py --repo owner/repo --token $GITHUB_TOKEN
+python setup-tools/scripts/setup-projects.py --repo owner/repo --token $TEAM_SETUP_TOKEN
 
 # Discussionsのみ再作成
-python setup-tools/scripts/create-discussions.py --repo owner/repo --token $GITHUB_TOKEN
+python setup-tools/scripts/create-discussions.py --repo owner/repo --token $TEAM_SETUP_TOKEN
 ```
 
 #### 完全リセット後の再実行

@@ -93,14 +93,14 @@ def main():
     parser.add_argument('--csv', type=str, default='data/sample-tasks.csv',
                        help='Path to CSV file')
     parser.add_argument('--repo', type=str, help='Repository name (owner/repo)')
-    parser.add_argument('--token', type=str, help='GitHub token (or use GITHUB_TOKEN env var)')
+    parser.add_argument('--token', type=str, help='GitHub token (or use TEAM_SETUP_TOKEN env var)')
     parser.add_argument('--dry-run', action='store_true', help='Print issues without creating them')
     
     args = parser.parse_args()
     
-    token = args.token or os.getenv('GITHUB_TOKEN')
+    token = args.token or os.getenv('TEAM_SETUP_TOKEN')
     if not token:
-        print("❌ Error: GitHub token not provided. Set GITHUB_TOKEN environment variable or use --token")
+        print("❌ Error: GitHub token not provided. Set TEAM_SETUP_TOKEN environment variable or use --token")
         sys.exit(1)
     
     repo_name = args.repo or os.getenv('GITHUB_REPO')

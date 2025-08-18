@@ -31,7 +31,7 @@ GitHub完結型環境：
 pip install -r requirements.txt
 
 # 2. 環境変数設定
-export GITHUB_TOKEN="your_github_token"
+export TEAM_SETUP_TOKEN="your_github_token"
 export GITHUB_REPO="owner/repo-name"
 
 # 3. セットアップ実行
@@ -42,16 +42,16 @@ export GITHUB_REPO="owner/repo-name"
 
 ```bash
 # Issues作成のみ
-python scripts/csv-to-issues.py --repo owner/repo --token $GITHUB_TOKEN
+python scripts/csv-to-issues.py --repo owner/repo --token $TEAM_SETUP_TOKEN
 
 # Wiki作成のみ  
-python scripts/create-wiki.py --repo owner/repo --token $GITHUB_TOKEN
+python scripts/create-wiki.py --repo owner/repo --token $TEAM_SETUP_TOKEN
 
 # Discussions作成のみ
-python scripts/create-discussions.py --repo owner/repo --token $GITHUB_TOKEN
+python scripts/create-discussions.py --repo owner/repo --token $TEAM_SETUP_TOKEN
 
 # Projects作成のみ
-python scripts/setup-projects.py --repo owner/repo --token $GITHUB_TOKEN
+python scripts/setup-projects.py --repo owner/repo --token $TEAM_SETUP_TOKEN
 ```
 
 ## 📁 ディレクトリ構造
@@ -134,7 +134,7 @@ BacklogからエクスポートしたCSVを `data/sample-tasks.csv` に配置：
 
 ```bash
 # 必須
-GITHUB_TOKEN=ghp_xxxxxxxxxxxx    # GitHubトークン
+TEAM_SETUP_TOKEN=ghp_xxxxxxxxxxxx    # GitHubトークン
 GITHUB_REPO=owner/repo-name      # リポジトリ名
 
 # オプション
