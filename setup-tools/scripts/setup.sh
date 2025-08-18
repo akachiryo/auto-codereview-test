@@ -120,9 +120,14 @@ setup_wiki() {
     
     python3 "$SCRIPT_DIR/create-wiki.py" \
         --repo "$GITHUB_REPO" \
-        --token "$GITHUB_TOKEN"
+        --token "$GITHUB_TOKEN" \
+        --retry-count 3
     
-    echo -e "${GREEN}✅ Wiki setup completed${NC}"
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✅ Wiki setup completed${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Wiki setup had issues, but continuing...${NC}"
+    fi
 }
 
 setup_discussions() {
@@ -141,9 +146,14 @@ setup_projects() {
     python3 "$SCRIPT_DIR/setup-projects.py" \
         --repo "$GITHUB_REPO" \
         --token "$GITHUB_TOKEN" \
-        --boards all
+        --boards all \
+        --retry-count 3
     
-    echo -e "${GREEN}✅ Projects setup completed${NC}"
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✅ Projects setup completed${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Projects setup had issues, but continuing...${NC}"
+    fi
 }
 
 create_env_file() {

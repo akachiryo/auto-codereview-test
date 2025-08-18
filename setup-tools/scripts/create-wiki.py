@@ -4,6 +4,7 @@ import sys
 import subprocess
 import shutil
 import time
+import requests
 from pathlib import Path
 import argparse
 from dotenv import load_dotenv
@@ -565,10 +566,60 @@ def commit_and_push(wiki_dir, message="Initial wiki setup"):
     else:
         print(f"⚠️  Push may have failed. Manual push might be required.\n{result.stderr}")
 
+def enable_wiki(repo_name, token):
+    """Enable Wiki for the repository"""
+    print("🔧 Ensuring Wiki is enabled...")
+    
+    headers = {'Authorization': f'token {token}', 'Accept': 'application/vnd.github.v3+json'}
+    url = f"https://api.github.com/repos/{repo_name}"
+    
+    # First check if wiki is already enabled
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        repo_data = response.json()
+        if repo_data.get('has_wiki', False):
+            print("  ✅ Wiki already enabled")
+            return True
+    
+    # Enable wiki
+    data = {"has_wiki": True}
+    response = requests.patch(url, headers=headers, json=data)
+    
+    if response.status_code == 200:
+        print("  ✅ Wiki enabled successfully")
+        return True
+    else:
+        print(f"  ⚠️  Could not enable Wiki: {response.status_code}")
+        return False
+
+def create_initial_wiki_page(repo_name, token):
+    """Create initial wiki page via API to initialize wiki repository"""
+    print("📝 Creating initial wiki page...")
+    
+    headers = {'Authorization': f'token {token}', 'Accept': 'application/vnd.github.v3+json'}
+    url = f"https://api.github.com/repos/{repo_name}/wiki"
+    
+    # Create a simple initial page
+    data = {
+        "title": "Home",
+        "content": "# Wiki Setup\n\nInitializing wiki...",
+        "format": "markdown"
+    }
+    
+    response = requests.post(url, headers=headers, json=data)
+    
+    if response.status_code == 201:
+        print("  ✅ Initial wiki page created")
+        return True
+    else:
+        print(f"  ⚠️  Could not create initial page: {response.status_code}")
+        return False
+
 def main():
     parser = argparse.ArgumentParser(description='Create GitHub Wiki pages')
     parser.add_argument('--repo', type=str, help='Repository (owner/repo)')
     parser.add_argument('--token', type=str, help='GitHub token')
+    parser.add_argument('--retry-count', type=int, default=3, help='Retry attempts')
     
     args = parser.parse_args()
     
@@ -578,7 +629,23 @@ def main():
         sys.exit(1)
     
     token = args.token or os.getenv('GITHUB_TOKEN')
+    if not token:
+        print("❌ Error: GitHub token required. Use --token or set GITHUB_TOKEN")
+        sys.exit(1)
     
+    print(f"🚀 Setting up Wiki for {repo_name}...")
+    
+    # Step 1: Enable Wiki
+    if not enable_wiki(repo_name, token):
+        print("❌ Failed to enable Wiki")
+        sys.exit(1)
+    
+    # Step 2: Create initial page to initialize wiki repo
+    time.sleep(2)  # Wait for wiki to be ready
+    if not create_initial_wiki_page(repo_name, token):
+        print("⚠️  Could not create initial page via API, trying Git method...")
+    
+    # Step 3: Setup wiki content via Git
     script_dir = Path(__file__).parent
     template_dir = script_dir.parent / 'templates' / 'wiki'
     wiki_dir = script_dir.parent / 'wiki-temp'
@@ -587,16 +654,36 @@ def main():
     if token:
         repo_url = f"https://{token}@github.com/{repo_name}"
     
-    wiki_exists = clone_wiki(repo_url, wiki_dir)
-    copy_templates(template_dir, wiki_dir)
-    
-    if wiki_exists:
-        commit_and_push(wiki_dir, "Update wiki documentation")
-    else:
-        commit_and_push(wiki_dir, "Initial wiki setup")
-    
-    shutil.rmtree(wiki_dir)
-    print("\n🎉 Wiki setup complete!")
+    # Try multiple times to clone/setup wiki
+    for attempt in range(args.retry_count):
+        try:
+            print(f"📥 Attempt {attempt + 1}/{args.retry_count}: Setting up wiki content...")
+            
+            # Wait a bit between attempts
+            if attempt > 0:
+                time.sleep(5)
+            
+            wiki_exists = clone_wiki(repo_url, wiki_dir)
+            copy_templates(template_dir, wiki_dir)
+            
+            if wiki_exists:
+                commit_and_push(wiki_dir, "Update wiki documentation")
+            else:
+                commit_and_push(wiki_dir, "Initial wiki setup with comprehensive documentation")
+            
+            shutil.rmtree(wiki_dir)
+            print(f"\n🎉 Wiki setup complete! Visit: https://github.com/{repo_name}/wiki")
+            return
+            
+        except Exception as e:
+            print(f"  ❌ Attempt {attempt + 1} failed: {str(e)}")
+            if os.path.exists(wiki_dir):
+                shutil.rmtree(wiki_dir)
+            
+            if attempt == args.retry_count - 1:
+                print(f"\n❌ Wiki setup failed after {args.retry_count} attempts")
+                print("   Try running again in a few minutes or check repository permissions")
+                sys.exit(1)
 
 if __name__ == "__main__":
     main()

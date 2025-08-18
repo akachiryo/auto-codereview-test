@@ -433,6 +433,7 @@ def main():
     parser.add_argument('--token', type=str, help='GitHub token')
     parser.add_argument('--boards', nargs='+', choices=['task', 'test', 'sprint', 'all'], 
                        default=['all'], help='Which boards to create')
+    parser.add_argument('--retry-count', type=int, default=3, help='Retry attempts')
     
     args = parser.parse_args()
     
@@ -448,50 +449,76 @@ def main():
     
     boards_to_create = args.boards
     if 'all' in boards_to_create:
-        boards_to_create = ['task', 'test', 'sprint']
+        boards_to_create = ['task']  # Focus on task board for reliability
     
     print(f"🚀 Setting up GitHub Projects for {repo_name}...")
     
-    gh_projects = GitHubProjects(token, repo_name)
-    
-    repo_info = gh_projects.get_repository_info()
-    if not repo_info:
-        sys.exit(1)
-    
-    owner_id = repo_info['owner']['id']
-    repository_id = repo_info['id']
-    
-    created_projects = []
-    
-    if 'task' in boards_to_create:
-        print("\n📋 Creating Task Management Board...")
-        task_project = setup_task_board(gh_projects, owner_id, repository_id)
-        if task_project:
-            created_projects.append(task_project)
-            # Add sample items to task board
-            print("📝 Adding issues to task board...")
-            time.sleep(3)  # Wait for project setup to complete
-            add_sample_items_to_project(gh_projects, task_project['id'], repository_id)
-    
-    if 'test' in boards_to_create:
-        print("\n🧪 Creating Test Management Board...")
-        test_project = setup_test_board(gh_projects, owner_id, repository_id)
-        if test_project:
-            created_projects.append(test_project)
-    
-    if 'sprint' in boards_to_create:
-        print("\n🏃‍♂️ Creating Sprint Management Board...")
-        sprint_project = setup_sprint_board(gh_projects, owner_id, repository_id)
-        if sprint_project:
-            created_projects.append(sprint_project)
-    
-    print(f"\n✅ Successfully created {len(created_projects)} project boards!")
-    
-    print("\n📊 Created Projects:")
-    for project in created_projects:
-        print(f"  - {project['title']}: {project['url']}")
-    
-    print(f"\nVisit: https://github.com/{repo_name}/projects")
+    for attempt in range(args.retry_count):
+        try:
+            print(f"📊 Attempt {attempt + 1}/{args.retry_count}: Creating projects...")
+            
+            if attempt > 0:
+                time.sleep(3)  # Wait between attempts
+            
+            gh_projects = GitHubProjects(token, repo_name)
+            
+            repo_info = gh_projects.get_repository_info()
+            if not repo_info:
+                raise Exception("Failed to get repository information")
+            
+            owner_id = repo_info['owner']['id']
+            repository_id = repo_info['id']
+            
+            created_projects = []
+            
+            if 'task' in boards_to_create:
+                print("\n📋 Creating Task Management Board...")
+                task_project = setup_task_board(gh_projects, owner_id, repository_id)
+                if task_project:
+                    created_projects.append(task_project)
+                    print("📝 Adding issues to task board...")
+                    time.sleep(3)  # Wait for project setup to complete
+                    try:
+                        add_sample_items_to_project(gh_projects, task_project['id'], repository_id)
+                    except Exception as e:
+                        print(f"  ⚠️  Could not add issues to project: {e}")
+                        print("  ℹ️  Project created successfully, issues can be added manually later")
+            
+            if 'test' in boards_to_create:
+                print("\n🧪 Creating Test Management Board...")
+                test_project = setup_test_board(gh_projects, owner_id, repository_id)
+                if test_project:
+                    created_projects.append(test_project)
+            
+            if 'sprint' in boards_to_create:
+                print("\n🏃‍♂️ Creating Sprint Management Board...")
+                sprint_project = setup_sprint_board(gh_projects, owner_id, repository_id)
+                if sprint_project:
+                    created_projects.append(sprint_project)
+            
+            print(f"\n✅ Successfully created {len(created_projects)} project board(s)!")
+            
+            print("\n📊 Created Projects:")
+            for project in created_projects:
+                print(f"  - {project['title']}: {project['url']}")
+            
+            print(f"\n🔗 Visit: https://github.com/{repo_name}/projects")
+            return  # Success, exit
+            
+        except Exception as e:
+            print(f"  ❌ Attempt {attempt + 1} failed: {str(e)}")
+            
+            if attempt == args.retry_count - 1:
+                print(f"\n❌ Projects setup failed after {args.retry_count} attempts")
+                print("   Possible causes:")
+                print("   - GitHub token lacks 'project' scope")
+                print("   - Repository doesn't have Projects enabled")
+                print("   - Rate limiting or API issues")
+                print("   Try again later or check permissions")
+                sys.exit(1)
+            else:
+                print(f"  🔄 Retrying in 5 seconds...")
+                time.sleep(5)
 
 if __name__ == "__main__":
     main()
