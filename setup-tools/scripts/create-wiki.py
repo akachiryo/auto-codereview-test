@@ -547,6 +547,11 @@ Issue #123
 
 def commit_and_push(wiki_dir, message="Initial wiki setup"):
     print("💾 Committing changes...")
+    
+    # Configure Git user for this repository
+    subprocess.run(['git', 'config', 'user.email', 'noreply@github.com'], cwd=wiki_dir)
+    subprocess.run(['git', 'config', 'user.name', 'GitHub Actions'], cwd=wiki_dir)
+    
     subprocess.run(['git', 'add', '.'], cwd=wiki_dir)
     subprocess.run(['git', 'commit', '-m', message], cwd=wiki_dir)
     
@@ -650,9 +655,12 @@ def main():
     template_dir = script_dir.parent / 'templates' / 'wiki'
     wiki_dir = script_dir.parent / 'wiki-temp'
     
-    repo_url = f"https://github.com/{repo_name}"
+    # Construct proper wiki repository URL
+    wiki_repo_url = f"{repo_name}.wiki.git"
     if token:
-        repo_url = f"https://{token}@github.com/{repo_name}"
+        repo_url = f"https://{token}@github.com/{wiki_repo_url}"
+    else:
+        repo_url = f"https://github.com/{wiki_repo_url}"
     
     # Try multiple times to clone/setup wiki
     for attempt in range(args.retry_count):
