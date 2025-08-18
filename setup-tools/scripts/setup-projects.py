@@ -51,11 +51,10 @@ class GitHubProjects:
     def create_project(self, title, description, owner_id):
         """Create a new project (v2)"""
         mutation = """
-        mutation($ownerId: ID!, $title: String!, $description: String!) {
+        mutation($ownerId: ID!, $title: String!) {
             createProjectV2(input: {
                 ownerId: $ownerId,
-                title: $title,
-                description: $description
+                title: $title
             }) {
                 projectV2 {
                     id
@@ -69,8 +68,7 @@ class GitHubProjects:
         
         variables = {
             "ownerId": owner_id,
-            "title": title,
-            "description": description
+            "title": title
         }
         
         response = requests.post(
