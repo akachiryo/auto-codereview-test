@@ -12,7 +12,14 @@
 
 ### ワンクリック環境構築
 
-[![🚀 Team Setup](https://img.shields.io/badge/🚀_Team_Setup-Click_to_Start-blue?style=for-the-badge)](../../actions/workflows/team-setup.yml)
+[![🚀 Team Setup](https://img.shields.io/badge/🚀_Team_Setup-Click_to_Start-blue?style=for-the-badge)](../../actions/workflows/team-setup.yml?query=workflow%3A%22%F0%9F%9A%80+Team+Development+Environment+Setup%22)
+
+**⚡ ワンクリック実行:**
+- [🚀 **完全セットアップ**](../../actions/workflows/team-setup.yml) → `Run workflow` → `Run workflow`ボタンクリック
+- [📋 Issues のみ](../../actions/workflows/team-setup.yml) → `Run workflow` → `Components to setup: issues`選択
+- [📚 Wiki のみ](../../actions/workflows/team-setup.yml) → `Run workflow` → `Components to setup: wiki`選択
+- [💬 Discussions のみ](../../actions/workflows/team-setup.yml) → `Run workflow` → `Components to setup: discussions`選択
+- [📊 Projects のみ](../../actions/workflows/team-setup.yml) → `Run workflow` → `Components to setup: projects`選択
 
 **BacklogからGitHub完結型の開発環境へ移行！**
 
@@ -40,9 +47,31 @@
 
 ```bash
 cd setup-tools
+
+# テスト実行（推奨）
+./scripts/quick-test.py
+
+# セットアップ実行
 ./scripts/setup.sh --dry-run  # プレビュー
 ./scripts/setup.sh            # 実行
 ```
+
+### ⚡ 実行完了後の確認ポイント
+
+✅ **Issues**: BacklogのCSVデータが変換されてIssuesに表示される  
+✅ **Wiki**: 以下のドキュメントが自動生成される
+   - 🏠 プロジェクトWiki (トップページ)
+   - 📊 テーブル設計書
+   - 🔌 API設計書  
+   - 📝 コーディング規約
+   - 🎨 画面設計書
+   - 🚀 開発環境構築
+   - 🌿 Git運用ルール
+   - 🚢 デプロイ手順
+   - 🆘 トラブルシューティング
+
+✅ **Discussions**: ウェルカムメッセージと運用ガイドが投稿される  
+✅ **Projects**: Issues連携済みのタスク・テスト・スプリント管理ボードが作成される
 
 ## 🚀 クイックスタート（従来のアプリ起動）
 
