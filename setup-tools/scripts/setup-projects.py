@@ -374,6 +374,59 @@ def setup_sprint_board(gh_projects, owner_id, repository_id):
     
     return project
 
+def add_sample_items_to_project(gh_projects, project_id, repository_id):
+    """Add sample items to project board"""
+    
+    # First, get all issues from the repository to add them as project items
+    import requests
+    
+    # Get repository issues
+    repo_url = f"https://api.github.com/repos/{gh_projects.repo}/issues?state=all&per_page=10"
+    headers = {'Authorization': f'token {gh_projects.token}', 'Accept': 'application/vnd.github.v3+json'}
+    
+    response = requests.get(repo_url, headers=headers)
+    
+    if response.status_code == 200:
+        issues = response.json()
+        
+        for issue in issues:
+            # Add issue to project
+            mutation = """
+            mutation($projectId: ID!, $contentId: ID!) {
+                addProjectV2ItemByContentId(input: {
+                    projectId: $projectId,
+                    contentId: $contentId
+                }) {
+                    item {
+                        id
+                        content {
+                            ... on Issue {
+                                title
+                                number
+                            }
+                        }
+                    }
+                }
+            }
+            """
+            
+            variables = {
+                "projectId": project_id,
+                "contentId": issue['node_id']
+            }
+            
+            item_response = requests.post(
+                'https://api.github.com/graphql',
+                headers=gh_projects.graphql_headers,
+                json={"query": mutation, "variables": variables}
+            )
+            
+            if item_response.status_code == 200:
+                item_data = item_response.json()
+                if 'errors' not in item_data:
+                    print(f"  ✅ Added issue #{issue['number']} to project")
+                    time.sleep(0.5)  # Rate limiting
+
 def main():
     parser = argparse.ArgumentParser(description='Setup GitHub Projects boards')
     parser.add_argument('--repo', type=str, help='Repository (owner/repo)')
@@ -415,6 +468,10 @@ def main():
         task_project = setup_task_board(gh_projects, owner_id, repository_id)
         if task_project:
             created_projects.append(task_project)
+            # Add sample items to task board
+            print("📝 Adding issues to task board...")
+            time.sleep(3)  # Wait for project setup to complete
+            add_sample_items_to_project(gh_projects, task_project['id'], repository_id)
     
     if 'test' in boards_to_create:
         print("\n🧪 Creating Test Management Board...")

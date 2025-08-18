@@ -3,6 +3,7 @@ import os
 import sys
 import requests
 import json
+import time
 from pathlib import Path
 import argparse
 from dotenv import load_dotenv
@@ -324,6 +325,106 @@ def create_sample_discussions(gh_discussions, template_dir):
                 created_count += 1
     
     print(f"\n✅ Created {created_count}/{len(discussions_to_create)} discussions")
+    
+    # Create welcome discussion if no discussions exist yet
+    create_welcome_discussion(gh_discussions, general_category_id)
+
+def create_welcome_discussion(gh_discussions, category_id):
+    """Create a welcome discussion to get started"""
+    
+    welcome_title = "🎉 チーム開発環境セットアップ完了！"
+    welcome_body = f"""# 🎉 チーム開発環境が自動設定されました！
+
+## 🚀 セットアップ完了内容
+
+✅ **GitHub Issues**: タスク管理システム  
+✅ **GitHub Wiki**: プロジェクトドキュメント  
+✅ **GitHub Discussions**: チームコミュニケーション  
+✅ **GitHub Projects**: プロジェクト管理ボード  
+
+## 📋 次にやること
+
+### 1. チームメンバーの追加
+- Repository Settings > Collaborators からメンバーを招待
+- 適切な権限レベルを設定
+
+### 2. タスクの確認と割り当て
+- [Issues](../issues) でインポートされたタスクを確認
+- チームメンバーにタスクをアサイン
+- 優先度とラベルを調整
+
+### 3. プロジェクトボードの活用
+- [Projects](../projects) でタスクの進捗を管理
+- カンバンボードでワークフローを可視化
+
+### 4. Wikiドキュメントの更新
+- [Wiki](../wiki) のテンプレートを自分たちのプロジェクトに合わせて更新
+- テーブル設計書・API設計書を詳細化
+
+## 💬 ディスカッションの使い方
+
+### 📅 議事録
+- 定期ミーティングの議事録を投稿
+- アクションアイテムの追跡
+
+### 💡 アイデア・提案
+- 新機能のアイデアを共有
+- 改善提案の議論
+
+### 📚 ナレッジ共有
+- 技術Tips・トラブルシューティング
+- 学習リソースの共有
+
+### ❓ Q&A
+- 技術的な質問と回答
+- 開発環境の問題解決
+
+## 🤝 チーム運用のコツ
+
+1. **定期的なコミュニケーション**
+   - 日次/週次の進捗共有
+   - 困った時は早めに相談
+
+2. **ドキュメント管理**
+   - 重要な決定事項はWikiに記録
+   - 議事録は必ずDiscussionsに投稿
+
+3. **タスク管理**
+   - Issuesは細かく分割して管理
+   - 完了したらすぐにクローズ
+
+4. **コードレビュー**
+   - Pull Requestは積極的にレビュー
+   - 建設的なフィードバックを心がけ
+
+## 🔗 便利なリンク
+
+- 📋 [Issues (タスク管理)](../issues)
+- 📚 [Wiki (ドキュメント)](../wiki)  
+- 📊 [Projects (進捗管理)](../projects)
+- 💻 [Pull Requests (コードレビュー)](../pulls)
+
+## 🎯 今日からスタート！
+
+このDiscussionsを使って、チーム全員で活発にコミュニケーションを取りましょう！
+
+質問や提案があれば、遠慮なく新しいDiscussionを作成してください。
+
+**セットアップ完了日時**: {time.strftime('%Y-%m-%d %H:%M:%S')}
+
+---
+
+🚀 **Happy Team Development!**
+"""
+    
+    result = gh_discussions.create_discussion(
+        welcome_title,
+        welcome_body,
+        category_id
+    )
+    
+    if result:
+        print(f"🎉 Created welcome discussion: {result['title']}")
 
 def main():
     parser = argparse.ArgumentParser(description='Setup GitHub Discussions with templates')
