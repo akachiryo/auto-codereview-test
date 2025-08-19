@@ -63,10 +63,10 @@ jobs:
           ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
     
     - name: 📚 Setup Wiki (Wiki Only)
-      if: github.event.inputs.setup_components == 'wiki'
+      if: github.event.inputs.setup_components == 'wiki' || github.event_name == 'push'
       run: |
         cd setup-tools
-        python scripts/create-wiki.py \
+        python3 scripts/create-wiki.py \
           --repo "${{ github.repository }}" \
           --token "${{ secrets.TEAM_SETUP_TOKEN }}" \
           --retry-count 3
@@ -80,10 +80,10 @@ jobs:
           --token "${{ secrets.TEAM_SETUP_TOKEN }}"
     
     - name: 📊 Setup Projects (Projects Only)
-      if: github.event.inputs.setup_components == 'projects'
+      if: github.event.inputs.setup_components == 'projects' || github.event_name == 'push'
       run: |
         cd setup-tools
-        python scripts/setup-projects.py \
+        python3 scripts/setup-projects.py \
           --repo "${{ github.repository }}" \
           --token "${{ secrets.TEAM_SETUP_TOKEN }}" \
           --boards all \
