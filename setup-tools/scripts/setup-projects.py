@@ -282,7 +282,7 @@ class GitHubProjectsManager:
         variables = {
             "owner": self.owner, 
             "name": self.repo_name,
-            "first": 20
+            "first": 100
         }
         
         data = self.execute_graphql_query(query, variables)
@@ -290,6 +290,10 @@ class GitHubProjectsManager:
         if data and 'repository' in data:
             issues = data['repository']['issues']['nodes']
             print(f"  📋 Found {len(issues)} open issues")
+            for issue in issues[:5]:  # Show first 5 issues for debugging
+                print(f"    • Issue #{issue['number']}: {issue['title'][:50]}...")
+            if len(issues) > 5:
+                print(f"    ... and {len(issues) - 5} more issues")
             return issues
         else:
             print(f"  ℹ️  No issues found or could not fetch issues")
@@ -390,7 +394,7 @@ class GitHubProjectsManager:
         issues = self.get_repository_issues()
         
         added_count = 0
-        for issue in issues[:10]:  # Limit to first 10 issues
+        for issue in issues[:50]:  # Link up to 50 issues
             if self.add_issue_to_project(project_id, issue['id']):
                 added_count += 1
                 time.sleep(1)  # Rate limiting

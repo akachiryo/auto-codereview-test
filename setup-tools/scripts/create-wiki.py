@@ -110,7 +110,15 @@ class WikiManager:
             subprocess.run(['git', 'commit', '-m', 'Initialize wiki repository'], 
                           cwd=wiki_dir, capture_output=True)
             
-            return False
+            # Push initial commit to create wiki repository
+            result = subprocess.run(['git', 'push', '-u', 'origin', 'master'], 
+                                  cwd=wiki_dir, capture_output=True, text=True)
+            if result.returncode == 0:
+                print("  ✅ Successfully created and initialized Wiki repository")
+                return True
+            else:
+                print(f"  ⚠️  Could not push initial wiki commit: {result.stderr}")
+                return False
 
     def create_wiki_content(self, wiki_dir):
         """Create comprehensive Wiki content"""
