@@ -148,20 +148,16 @@ class GitHubProjectsManager:
     # Note: linkRepositoryToProject mutation does not support Projects v2
     # Instead, we specify repositoryId during project creation
 
-    def create_project_board_view(self, project_id, view_name, group_by_field_id=None):
-        """Create a board view for the project"""
+    def link_project_v2_to_repository(self, project_id, repository_id):
+        """Alternative method to link project to repository (if needed)"""
         mutation = """
-        mutation($projectId: ID!, $name: String!, $groupByFieldId: ID) {
-            createProjectV2View(input: {
+        mutation($projectId: ID!, $repositoryId: ID!) {
+            linkProjectV2ToRepository(input: {
                 projectId: $projectId,
-                name: $name,
-                layout: BOARD_LAYOUT,
-                groupByFieldId: $groupByFieldId
+                repositoryId: $repositoryId
             }) {
-                projectV2View {
+                project {
                     id
-                    name
-                    layout
                 }
             }
         }
@@ -169,21 +165,20 @@ class GitHubProjectsManager:
         
         variables = {
             "projectId": project_id,
-            "name": view_name
+            "repositoryId": repository_id
         }
-        
-        if group_by_field_id:
-            variables["groupByFieldId"] = group_by_field_id
         
         data = self.execute_graphql_query(mutation, variables)
         
-        if data and 'createProjectV2View' in data:
-            view = data['createProjectV2View']['projectV2View']
-            print(f"  ✅ Created board view: {view['name']}")
-            return view
+        if data and 'linkProjectV2ToRepository' in data:
+            print(f"  ✅ Linked project to repository (alternative method)")
+            return True
         else:
-            print(f"  ⚠️  Could not create board view: {view_name}")
-            return None
+            print(f"  ⚠️  Could not link project to repository (alternative method)")
+            return False
+
+    # Note: createProjectV2View mutation does not exist in GitHub GraphQL API
+    # Projects v2 uses default views, and board layout depends on field configuration
 
     def get_project_fields(self, project_id):
         """Get project field information"""
@@ -405,12 +400,8 @@ class GitHubProjectsManager:
         else:
             print(f"  ℹ️  No issues were added (this is normal for new repositories)")
         
-        # Create board view grouped by Status
-        print("  📋 Creating board view...")
-        if status_field and 'id' in status_field:
-            self.create_project_board_view(project_id, "📋 Task Board", status_field['id'])
-        else:
-            self.create_project_board_view(project_id, "📋 Task Board")
+        # Note: Projects v2 automatically provides board and table views
+        print("  ✅ Project configured - Board view available by default")
         
         return project
 
@@ -465,12 +456,8 @@ class GitHubProjectsManager:
         ]
         self.create_single_select_field(project_id, "Environment", env_options)
         
-        # Create board view grouped by Test Status
-        print("  🧪 Creating test board view...")
-        if test_status_field and 'id' in test_status_field:
-            self.create_project_board_view(project_id, "🧪 Test Board", test_status_field['id'])
-        else:
-            self.create_project_board_view(project_id, "🧪 Test Board")
+        # Note: Projects v2 automatically provides board and table views
+        print("  ✅ Test project configured - Board view available by default")
         
         return project
 
@@ -514,12 +501,8 @@ class GitHubProjectsManager:
         ]
         self.create_single_select_field(project_id, "Story Points", story_point_options)
         
-        # Create board view grouped by Sprint
-        print("  🏃‍♂️ Creating sprint board view...")
-        if sprint_field and 'id' in sprint_field:
-            self.create_project_board_view(project_id, "🏃‍♂️ Sprint Board", sprint_field['id'])
-        else:
-            self.create_project_board_view(project_id, "🏃‍♂️ Sprint Board")
+        # Note: Projects v2 automatically provides board and table views
+        print("  ✅ Sprint project configured - Board view available by default")
         
         return project
 
