@@ -2422,7 +2422,7 @@ groups:
 
     def generate_troubleshooting(self):
         """Generate troubleshooting guide"""
-        return f'''# 🆘 トラブルシューティング
+        return '''# 🆘 トラブルシューティング
 
 ## 🎯 よくある問題と解決法
 
@@ -2692,9 +2692,9 @@ logging.level.org.springframework.web=DEBUG
 # コントローラーのマッピング確認
 @RestController
 @RequestMapping("/api/v1/users")  # パス確認
-public class UserController {
-    // ...
-}
+public class UserController {{
+    // メソッドの実装
+}}
 ```
 
 #### ❌ CORS エラー (フロントエンド)
