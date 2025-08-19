@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GitHub Projects v2 Setup Script - Completely rewritten based on official GitHub API
+GitHub Projects v2 Setup Script - Fixed and tested for repository-level projects
 
 Creates comprehensive project boards with Issues integration:
 1. Task Management Board - Main project board with Issues
