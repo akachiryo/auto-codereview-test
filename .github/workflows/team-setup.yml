@@ -1,6 +1,9 @@
 name: 🚀 Team Development Environment Setup
 
 on:
+  push:
+    branches: [ main ]
+    paths: [ 'setup-tools/**' ]
   workflow_dispatch:
     inputs:
       setup_components:
