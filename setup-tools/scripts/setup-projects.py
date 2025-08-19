@@ -88,28 +88,52 @@ class GitHubProjectsManager:
             print(f"❌ Could not get repository information for {self.repo}")
             return None
 
-    def create_project_v2(self, title, owner_id):
-        """Create a new GitHub Project v2"""
-        mutation = """
-        mutation($ownerId: ID!, $title: String!) {
-            createProjectV2(input: {
-                ownerId: $ownerId,
-                title: $title
-            }) {
-                projectV2 {
-                    id
-                    number
-                    title
-                    url
+    def create_project_v2(self, title, owner_id, repository_id=None):
+        """Create a new GitHub Project v2 linked to repository"""
+        if repository_id:
+            # Create project linked to repository
+            mutation = """
+            mutation($ownerId: ID!, $title: String!, $repositoryId: ID!) {
+                createProjectV2(input: {
+                    ownerId: $ownerId,
+                    title: $title,
+                    repositoryId: $repositoryId
+                }) {
+                    projectV2 {
+                        id
+                        number
+                        title
+                        url
+                    }
                 }
             }
-        }
-        """
-        
-        variables = {
-            "ownerId": owner_id,
-            "title": title
-        }
+            """
+            variables = {
+                "ownerId": owner_id,
+                "title": title,
+                "repositoryId": repository_id
+            }
+        else:
+            # Create standalone project
+            mutation = """
+            mutation($ownerId: ID!, $title: String!) {
+                createProjectV2(input: {
+                    ownerId: $ownerId,
+                    title: $title
+                }) {
+                    projectV2 {
+                        id
+                        number
+                        title
+                        url
+                    }
+                }
+            }
+            """
+            variables = {
+                "ownerId": owner_id,
+                "title": title
+            }
         
         data = self.execute_graphql_query(mutation, variables)
         
@@ -121,16 +145,23 @@ class GitHubProjectsManager:
             print(f"❌ Failed to create project: {title}")
             return None
 
-    def link_repository_to_project(self, project_id, repository_id):
-        """Link repository to project"""
+    # Note: linkRepositoryToProject mutation does not support Projects v2
+    # Instead, we specify repositoryId during project creation
+
+    def create_project_board_view(self, project_id, view_name, group_by_field_id=None):
+        """Create a board view for the project"""
         mutation = """
-        mutation($projectId: ID!, $repositoryId: ID!) {
-            linkRepositoryToProject(input: {
+        mutation($projectId: ID!, $name: String!, $groupByFieldId: ID) {
+            createProjectV2View(input: {
                 projectId: $projectId,
-                repositoryId: $repositoryId
+                name: $name,
+                layout: BOARD_LAYOUT,
+                groupByFieldId: $groupByFieldId
             }) {
-                project {
+                projectV2View {
                     id
+                    name
+                    layout
                 }
             }
         }
@@ -138,17 +169,21 @@ class GitHubProjectsManager:
         
         variables = {
             "projectId": project_id,
-            "repositoryId": repository_id
+            "name": view_name
         }
+        
+        if group_by_field_id:
+            variables["groupByFieldId"] = group_by_field_id
         
         data = self.execute_graphql_query(mutation, variables)
         
-        if data and 'linkRepositoryToProject' in data:
-            print(f"  ✅ Linked repository to project")
-            return True
+        if data and 'createProjectV2View' in data:
+            view = data['createProjectV2View']['projectV2View']
+            print(f"  ✅ Created board view: {view['name']}")
+            return view
         else:
-            print(f"  ⚠️  Could not link repository to project")
-            return False
+            print(f"  ⚠️  Could not create board view: {view_name}")
+            return None
 
     def get_project_fields(self, project_id):
         """Get project field information"""
@@ -306,21 +341,15 @@ class GitHubProjectsManager:
         """Create main task management board"""
         print("📋 Creating Task Management Board...")
         
-        # Create project
-        project = self.create_project_v2("🎯 タスク管理ボード", owner_id)
+        # Create project linked to repository
+        project = self.create_project_v2("🎯 タスク管理ボード", owner_id, repository_id)
         if not project:
             return None
         
         project_id = project['id']
         
-        # Wait for project to be fully created before linking
+        # Wait for project to be fully created
         print("  ⏳ Waiting for project to be ready...")
-        time.sleep(5)
-        
-        # Link repository
-        self.link_repository_to_project(project_id, repository_id)
-        
-        # Wait for linking to complete
         time.sleep(3)
         
         # Create Status field
@@ -331,7 +360,7 @@ class GitHubProjectsManager:
             {"name": "👀 In Review", "color": "BLUE", "description": "Tasks under review"},
             {"name": "✅ Done", "color": "GREEN", "description": "Completed tasks"}
         ]
-        self.create_single_select_field(project_id, "Status", status_options)
+        status_field = self.create_single_select_field(project_id, "Status", status_options)
         
         # Wait between field creations for API rate limiting
         time.sleep(3)
@@ -376,27 +405,28 @@ class GitHubProjectsManager:
         else:
             print(f"  ℹ️  No issues were added (this is normal for new repositories)")
         
+        # Create board view grouped by Status
+        print("  📋 Creating board view...")
+        if status_field and 'id' in status_field:
+            self.create_project_board_view(project_id, "📋 Task Board", status_field['id'])
+        else:
+            self.create_project_board_view(project_id, "📋 Task Board")
+        
         return project
 
     def setup_test_management_board(self, owner_id, repository_id):
         """Create test management board"""
         print("🧪 Creating Test Management Board...")
         
-        # Create project
-        project = self.create_project_v2("🧪 テスト管理ボード", owner_id)
+        # Create project linked to repository
+        project = self.create_project_v2("🧪 テスト管理ボード", owner_id, repository_id)
         if not project:
             return None
         
         project_id = project['id']
         
-        # Wait for project to be fully created before linking
+        # Wait for project to be fully created
         print("  ⏳ Waiting for project to be ready...")
-        time.sleep(5)
-        
-        # Link repository
-        self.link_repository_to_project(project_id, repository_id)
-        
-        # Wait for linking to complete
         time.sleep(3)
         
         # Create Test Status field
@@ -408,7 +438,7 @@ class GitHubProjectsManager:
             {"name": "❌ Failed", "color": "RED", "description": "Tests failed"},
             {"name": "⚠️ Blocked", "color": "ORANGE", "description": "Tests blocked by dependencies"}
         ]
-        self.create_single_select_field(project_id, "Test Status", test_status_options)
+        test_status_field = self.create_single_select_field(project_id, "Test Status", test_status_options)
         
         # Wait between field creations for API rate limiting
         time.sleep(3)
@@ -435,27 +465,28 @@ class GitHubProjectsManager:
         ]
         self.create_single_select_field(project_id, "Environment", env_options)
         
+        # Create board view grouped by Test Status
+        print("  🧪 Creating test board view...")
+        if test_status_field and 'id' in test_status_field:
+            self.create_project_board_view(project_id, "🧪 Test Board", test_status_field['id'])
+        else:
+            self.create_project_board_view(project_id, "🧪 Test Board")
+        
         return project
 
     def setup_sprint_management_board(self, owner_id, repository_id):
         """Create sprint management board"""
         print("🏃‍♂️ Creating Sprint Management Board...")
         
-        # Create project
-        project = self.create_project_v2("🏃‍♂️ スプリント管理", owner_id)
+        # Create project linked to repository
+        project = self.create_project_v2("🏃‍♂️ スプリント管理", owner_id, repository_id)
         if not project:
             return None
         
         project_id = project['id']
         
-        # Wait for project to be fully created before linking
+        # Wait for project to be fully created
         print("  ⏳ Waiting for project to be ready...")
-        time.sleep(5)
-        
-        # Link repository
-        self.link_repository_to_project(project_id, repository_id)
-        
-        # Wait for linking to complete
         time.sleep(3)
         
         # Create Sprint field
@@ -466,7 +497,7 @@ class GitHubProjectsManager:
             {"name": "Sprint 3", "color": "YELLOW", "description": "Third sprint iteration"},
             {"name": "Backlog", "color": "GRAY", "description": "Items not yet assigned to a sprint"}
         ]
-        self.create_single_select_field(project_id, "Sprint", sprint_options)
+        sprint_field = self.create_single_select_field(project_id, "Sprint", sprint_options)
         
         # Wait between field creations for API rate limiting
         time.sleep(3)
@@ -482,6 +513,13 @@ class GitHubProjectsManager:
             {"name": "13", "color": "RED", "description": "Epic task - 13 points"}
         ]
         self.create_single_select_field(project_id, "Story Points", story_point_options)
+        
+        # Create board view grouped by Sprint
+        print("  🏃‍♂️ Creating sprint board view...")
+        if sprint_field and 'id' in sprint_field:
+            self.create_project_board_view(project_id, "🏃‍♂️ Sprint Board", sprint_field['id'])
+        else:
+            self.create_project_board_view(project_id, "🏃‍♂️ Sprint Board")
         
         return project
 
