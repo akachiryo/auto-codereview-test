@@ -90,14 +90,14 @@ jobs:
           --retry-count 3
     
     - name: 🚀 Setup All Components
-      if: github.event.inputs.setup_components == 'all'
+      if: github.event.inputs.setup_components == 'all' || github.event_name == 'push'
       run: |
         cd setup-tools
         ./scripts/setup.sh \
           --repo "${{ github.repository }}" \
           --token "${{ secrets.TEAM_SETUP_TOKEN }}" \
-          --csv "${{ github.event.inputs.csv_file }}" \
-          ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
+          --csv "${{ github.event.inputs.csv_file || 'data/sample-tasks.csv' }}" \
+          ${{ (github.event.inputs.dry_run == 'true' && '--dry-run') || '' }}
     
     - name: 📋 Create Setup Summary
       if: always()
