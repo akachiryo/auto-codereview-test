@@ -313,44 +313,48 @@ class GitHubProjectsManager:
         
         project_id = project['id']
         
+        # Wait for project to be fully created before linking
+        print("  ⏳ Waiting for project to be ready...")
+        time.sleep(5)
+        
         # Link repository
         self.link_repository_to_project(project_id, repository_id)
         
-        # Wait for project to be ready
+        # Wait for linking to complete
         time.sleep(3)
         
         # Create Status field
         print("  🔧 Creating Status field...")
         status_options = [
-            {"name": "📝 To Do", "color": "GRAY"},
-            {"name": "🔄 In Progress", "color": "YELLOW"},
-            {"name": "👀 In Review", "color": "BLUE"},
-            {"name": "✅ Done", "color": "GREEN"}
+            {"name": "📝 To Do", "color": "GRAY", "description": "Tasks not yet started"},
+            {"name": "🔄 In Progress", "color": "YELLOW", "description": "Tasks currently being worked on"},
+            {"name": "👀 In Review", "color": "BLUE", "description": "Tasks under review"},
+            {"name": "✅ Done", "color": "GREEN", "description": "Completed tasks"}
         ]
         self.create_single_select_field(project_id, "Status", status_options)
         
-        # Wait between field creations
-        time.sleep(2)
+        # Wait between field creations for API rate limiting
+        time.sleep(3)
         
         # Create Priority field
         print("  🔧 Creating Priority field...")
         priority_options = [
-            {"name": "🔥 High", "color": "RED"},
-            {"name": "🟡 Medium", "color": "YELLOW"},
-            {"name": "🟢 Low", "color": "GREEN"}
+            {"name": "🔥 High", "color": "RED", "description": "High priority tasks requiring immediate attention"},
+            {"name": "🟡 Medium", "color": "YELLOW", "description": "Medium priority tasks"},
+            {"name": "🟢 Low", "color": "GREEN", "description": "Low priority tasks"}
         ]
         self.create_single_select_field(project_id, "Priority", priority_options)
         
-        # Wait between field creations
-        time.sleep(2)
+        # Wait between field creations for API rate limiting
+        time.sleep(3)
         
         # Create Effort field
         print("  🔧 Creating Effort field...")
         effort_options = [
-            {"name": "S (1-2h)", "color": "GREEN"},
-            {"name": "M (3-8h)", "color": "YELLOW"},
-            {"name": "L (1-2d)", "color": "ORANGE"},
-            {"name": "XL (3-5d)", "color": "RED"}
+            {"name": "S (1-2h)", "color": "GREEN", "description": "Small tasks taking 1-2 hours"},
+            {"name": "M (3-8h)", "color": "YELLOW", "description": "Medium tasks taking 3-8 hours"},
+            {"name": "L (1-2d)", "color": "ORANGE", "description": "Large tasks taking 1-2 days"},
+            {"name": "XL (3-5d)", "color": "RED", "description": "Extra large tasks taking 3-5 days"}
         ]
         self.create_single_select_field(project_id, "Effort", effort_options)
         
@@ -385,45 +389,49 @@ class GitHubProjectsManager:
         
         project_id = project['id']
         
+        # Wait for project to be fully created before linking
+        print("  ⏳ Waiting for project to be ready...")
+        time.sleep(5)
+        
         # Link repository
         self.link_repository_to_project(project_id, repository_id)
         
-        # Wait for project to be ready
+        # Wait for linking to complete
         time.sleep(3)
         
         # Create Test Status field
         print("  🔧 Creating Test Status field...")
         test_status_options = [
-            {"name": "📝 Not Started", "color": "GRAY"},
-            {"name": "🧪 Testing", "color": "YELLOW"},
-            {"name": "✅ Passed", "color": "GREEN"},
-            {"name": "❌ Failed", "color": "RED"},
-            {"name": "⚠️ Blocked", "color": "ORANGE"}
+            {"name": "📝 Not Started", "color": "GRAY", "description": "Tests not yet started"},
+            {"name": "🧪 Testing", "color": "YELLOW", "description": "Tests currently running"},
+            {"name": "✅ Passed", "color": "GREEN", "description": "Tests passed successfully"},
+            {"name": "❌ Failed", "color": "RED", "description": "Tests failed"},
+            {"name": "⚠️ Blocked", "color": "ORANGE", "description": "Tests blocked by dependencies"}
         ]
         self.create_single_select_field(project_id, "Test Status", test_status_options)
         
-        # Wait between field creations
-        time.sleep(2)
+        # Wait between field creations for API rate limiting
+        time.sleep(3)
         
         # Create Test Type field
         print("  🔧 Creating Test Type field...")
         test_type_options = [
-            {"name": "Unit Test", "color": "BLUE"},
-            {"name": "Integration Test", "color": "PURPLE"},
-            {"name": "E2E Test", "color": "PINK"},
-            {"name": "Manual Test", "color": "GRAY"}
+            {"name": "Unit Test", "color": "BLUE", "description": "Individual component testing"},
+            {"name": "Integration Test", "color": "PURPLE", "description": "Multiple component integration testing"},
+            {"name": "E2E Test", "color": "PINK", "description": "End-to-end user workflow testing"},
+            {"name": "Manual Test", "color": "GRAY", "description": "Manual testing procedures"}
         ]
         self.create_single_select_field(project_id, "Test Type", test_type_options)
         
-        # Wait between field creations
-        time.sleep(2)
+        # Wait between field creations for API rate limiting
+        time.sleep(3)
         
         # Create Environment field
         print("  🔧 Creating Environment field...")
         env_options = [
-            {"name": "Development", "color": "YELLOW"},
-            {"name": "Staging", "color": "BLUE"},
-            {"name": "Production", "color": "GREEN"}
+            {"name": "Development", "color": "YELLOW", "description": "Development environment"},
+            {"name": "Staging", "color": "BLUE", "description": "Staging environment for testing"},
+            {"name": "Production", "color": "GREEN", "description": "Live production environment"}
         ]
         self.create_single_select_field(project_id, "Environment", env_options)
         
@@ -440,34 +448,38 @@ class GitHubProjectsManager:
         
         project_id = project['id']
         
+        # Wait for project to be fully created before linking
+        print("  ⏳ Waiting for project to be ready...")
+        time.sleep(5)
+        
         # Link repository
         self.link_repository_to_project(project_id, repository_id)
         
-        # Wait for project to be ready
+        # Wait for linking to complete
         time.sleep(3)
         
         # Create Sprint field
         print("  🔧 Creating Sprint field...")
         sprint_options = [
-            {"name": "Sprint 1", "color": "BLUE"},
-            {"name": "Sprint 2", "color": "GREEN"},
-            {"name": "Sprint 3", "color": "YELLOW"},
-            {"name": "Backlog", "color": "GRAY"}
+            {"name": "Sprint 1", "color": "BLUE", "description": "First sprint iteration"},
+            {"name": "Sprint 2", "color": "GREEN", "description": "Second sprint iteration"},
+            {"name": "Sprint 3", "color": "YELLOW", "description": "Third sprint iteration"},
+            {"name": "Backlog", "color": "GRAY", "description": "Items not yet assigned to a sprint"}
         ]
         self.create_single_select_field(project_id, "Sprint", sprint_options)
         
-        # Wait between field creations
-        time.sleep(2)
+        # Wait between field creations for API rate limiting
+        time.sleep(3)
         
         # Create Story Points field
         print("  🔧 Creating Story Points field...")
         story_point_options = [
-            {"name": "1", "color": "GREEN"},
-            {"name": "2", "color": "GREEN"},
-            {"name": "3", "color": "YELLOW"},
-            {"name": "5", "color": "YELLOW"},
-            {"name": "8", "color": "ORANGE"},
-            {"name": "13", "color": "RED"}
+            {"name": "1", "color": "GREEN", "description": "Very small task - 1 point"},
+            {"name": "2", "color": "GREEN", "description": "Small task - 2 points"},
+            {"name": "3", "color": "YELLOW", "description": "Medium task - 3 points"},
+            {"name": "5", "color": "YELLOW", "description": "Large task - 5 points"},
+            {"name": "8", "color": "ORANGE", "description": "Very large task - 8 points"},
+            {"name": "13", "color": "RED", "description": "Epic task - 13 points"}
         ]
         self.create_single_select_field(project_id, "Story Points", story_point_options)
         

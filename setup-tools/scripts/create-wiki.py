@@ -74,7 +74,7 @@ class WikiManager:
         return f"https://{self.token}@github.com/{wiki_repo}"
 
     def initialize_wiki_repository(self, wiki_dir):
-        """Initialize or clone Wiki repository"""
+        """Initialize or clone Wiki repository (Git-only approach)"""
         print("📥 Setting up Wiki repository...")
         
         if os.path.exists(wiki_dir):
@@ -94,9 +94,9 @@ class WikiManager:
         else:
             print("  📝 Wiki doesn't exist yet, creating new repository...")
             
-            # Create new repository
+            # Create new repository with proper branch setup
             os.makedirs(wiki_dir, exist_ok=True)
-            subprocess.run(['git', 'init'], cwd=wiki_dir, capture_output=True)
+            subprocess.run(['git', 'init', '--initial-branch=master'], cwd=wiki_dir, capture_output=True)
             self.setup_git_environment(wiki_dir)
             subprocess.run(['git', 'remote', 'add', 'origin', wiki_url], 
                           cwd=wiki_dir, capture_output=True)
@@ -162,21 +162,18 @@ class WikiManager:
             print(f"  ⚠️  Git commit failed: {result.stderr}")
             return False
         
-        # Try to push to different possible branches
-        branches_to_try = ['master', 'main']
+        # For new Wiki repositories, we need to push to master (GitHub Wiki default)
+        print(f"  📤 Trying to push to master...")
+        result = subprocess.run(['git', 'push', '-u', 'origin', 'master'], 
+                               cwd=wiki_dir, capture_output=True, text=True)
+        
         pushed_successfully = False
         
-        for branch in branches_to_try:
-            print(f"  📤 Trying to push to {branch}...")
-            result = subprocess.run(['git', 'push', '-u', 'origin', branch], 
-                                   cwd=wiki_dir, capture_output=True, text=True)
-            
-            if result.returncode == 0:
-                print(f"  ✅ Successfully pushed to {branch}")
-                pushed_successfully = True
-                break
-            else:
-                print(f"  ⚠️  Push to {branch} failed: {result.stderr}")
+        if result.returncode == 0:
+            print(f"  ✅ Successfully pushed to master")
+            pushed_successfully = True
+        else:
+            print(f"  ⚠️  Push to master failed: {result.stderr}")
         
         if not pushed_successfully:
             print("  ⚠️  Could not push to any branch. Wiki content created locally.")
