@@ -45,6 +45,11 @@ jobs:
     - name: 📦 Install dependencies
       run: |
         pip install -r setup-tools/requirements.txt
+        
+    - name: 🔧 Verify setup script permissions
+      run: |
+        chmod +x setup-tools/scripts/setup.sh
+        ls -la setup-tools/scripts/
     
     - name: 🔧 Setup environment variables
       run: |
@@ -63,7 +68,7 @@ jobs:
           ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
     
     - name: 📚 Setup Wiki (Wiki Only)
-      if: github.event.inputs.setup_components == 'wiki' || github.event_name == 'push'
+      if: github.event.inputs.setup_components == 'wiki'
       run: |
         cd setup-tools
         python3 scripts/create-wiki.py \
@@ -80,7 +85,7 @@ jobs:
           --token "${{ secrets.TEAM_SETUP_TOKEN }}"
     
     - name: 📊 Setup Projects (Projects Only)
-      if: github.event.inputs.setup_components == 'projects' || github.event_name == 'push'
+      if: github.event.inputs.setup_components == 'projects'
       run: |
         cd setup-tools
         python3 scripts/setup-projects.py \
