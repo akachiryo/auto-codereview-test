@@ -531,6 +531,9 @@ def main():
         boards_to_create = ['task', 'test', 'sprint']
     
     print(f"🚀 Setting up GitHub Projects v2 for {repo_name}...")
+    print(f"  🔑 Token available: {'Yes' if token else 'No'}")
+    print(f"  📊 Boards to create: {boards_to_create}")
+    print(f"  📁 Working directory: {os.getcwd()}")
     
     for attempt in range(args.retry_count):
         try:

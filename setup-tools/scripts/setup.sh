@@ -113,7 +113,7 @@ setup_issues() {
     python3 "$SCRIPT_DIR/csv-to-issues.py" \
         --csv "$CSV_FILE" \
         --repo "$GITHUB_REPO" \
-        --token "$TOKEN" \
+        --token "$TEAM_SETUP_TOKEN" \
         $([ "$DRY_RUN" = true ] && echo "--dry-run")
     
     echo -e "${GREEN}✅ Issues setup completed${NC}"
@@ -121,10 +121,13 @@ setup_issues() {
 
 setup_wiki() {
     echo -e "${BLUE}📚 Setting up Wiki...${NC}"
+    echo "  Repository: $GITHUB_REPO"
+    echo "  Token: ${TEAM_SETUP_TOKEN:0:10}..."
+    echo "  Script: $SCRIPT_DIR/create-wiki.py"
     
     python3 "$SCRIPT_DIR/create-wiki.py" \
         --repo "$GITHUB_REPO" \
-        --token "$TOKEN" \
+        --token "$TEAM_SETUP_TOKEN" \
         --retry-count 3
     
     if [ $? -eq 0 ]; then
@@ -146,10 +149,13 @@ setup_discussions() {
 
 setup_projects() {
     echo -e "${BLUE}📊 Setting up Projects...${NC}"
+    echo "  Repository: $GITHUB_REPO"
+    echo "  Token: ${TEAM_SETUP_TOKEN:0:10}..."
+    echo "  Script: $SCRIPT_DIR/setup-projects.py"
     
     python3 "$SCRIPT_DIR/setup-projects.py" \
         --repo "$GITHUB_REPO" \
-        --token "$TOKEN" \
+        --token "$TEAM_SETUP_TOKEN" \
         --boards all \
         --retry-count 3
     
