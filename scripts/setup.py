@@ -11,14 +11,14 @@ import requests
 from typing import Dict, List
 
 # 環境変数から設定を取得
-GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
+TEAM_SETUP_TOKEN = os.environ.get('TEAM_SETUP_TOKEN')
 REPO = os.environ.get('REPO')
 REPO_OWNER, REPO_NAME = REPO.split('/') if REPO else (None, None)
 
 # GitHub API設定
 API_BASE = 'https://api.github.com'
 HEADERS = {
-    'Authorization': f'token {GITHUB_TOKEN}',
+    'Authorization': f'token {TEAM_SETUP_TOKEN}',
     'Accept': 'application/vnd.github.v3+json',
     'X-GitHub-Api-Version': '2022-11-28'
 }
@@ -26,7 +26,7 @@ HEADERS = {
 # GraphQL API設定
 GRAPHQL_URL = 'https://api.github.com/graphql'
 GRAPHQL_HEADERS = {
-    'Authorization': f'Bearer {GITHUB_TOKEN}',
+    'Authorization': f'Bearer {TEAM_SETUP_TOKEN}',
     'Content-Type': 'application/json'
 }
 
@@ -392,8 +392,8 @@ def main():
     print("🚀 Starting GitHub Setup...")
     print(f"📦 Repository: {REPO}")
     
-    if not GITHUB_TOKEN or not REPO:
-        print("❌ Error: GITHUB_TOKEN and REPO environment variables are required")
+    if not TEAM_SETUP_TOKEN or not REPO:
+        print("❌ Error: TEAM_SETUP_TOKEN and REPO environment variables are required")
         return 1
     
     try:
