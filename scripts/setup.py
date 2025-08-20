@@ -59,6 +59,63 @@ def graphql_request(query: str, variables: Dict = None) -> Dict:
     return data.get('data', {})
 
 
+def initialize_wiki_git():
+    """Git操作でWikiリポジトリを直接初期化"""
+    print("\n🌟 Initializing Wiki repository via git...")
+    
+    import subprocess
+    import tempfile
+    
+    try:
+        # 一時ディレクトリでWikiリポジトリをクローンまたは作成
+        with tempfile.TemporaryDirectory() as temp_dir:
+            wiki_url = f"https://{TEAM_SETUP_TOKEN}@github.com/{REPO}.wiki.git"
+            
+            # まずクローンを試す
+            try:
+                result = subprocess.run(['git', 'clone', wiki_url, temp_dir], 
+                                      capture_output=True, text=True, cwd='.')
+                if result.returncode == 0:
+                    print("✅ Wiki already exists, will update it")
+                    return True
+            except:
+                pass
+            
+            # Wikiが存在しない場合、新しく作成
+            print("📝 Creating new Wiki repository...")
+            
+            # 新しいリポジトリを初期化
+            subprocess.run(['git', 'init'], cwd=temp_dir, check=True)
+            subprocess.run(['git', 'config', 'user.email', 'action@github.com'], cwd=temp_dir, check=True)
+            subprocess.run(['git', 'config', 'user.name', 'GitHub Action'], cwd=temp_dir, check=True)
+            
+            # 初期Home.mdを作成
+            home_path = os.path.join(temp_dir, 'Home.md')
+            with open(home_path, 'w', encoding='utf-8') as f:
+                f.write("""# Welcome to the Wiki!
+
+This is the initial page to create the Wiki repository.
+This will be automatically updated by the setup process.
+""")
+            
+            # コミットとプッシュ
+            subprocess.run(['git', 'add', '.'], cwd=temp_dir, check=True)
+            subprocess.run(['git', 'commit', '-m', '🌟 Initialize Wiki repository'], cwd=temp_dir, check=True)
+            subprocess.run(['git', 'remote', 'add', 'origin', wiki_url], cwd=temp_dir, check=True)
+            subprocess.run(['git', 'push', '-u', 'origin', 'master'], cwd=temp_dir, check=True)
+            
+            print("✅ Wiki initialized successfully")
+            return True
+            
+    except subprocess.CalledProcessError as e:
+        print(f"⚠️ Wiki initialization failed: {str(e)}")
+        print("💡 This is normal if Wiki already exists or will be created during clone step")
+        return True  # エラーでも続行（既存のWikiがある場合など）
+    except Exception as e:
+        print(f"⚠️ Wiki initialization error: {str(e)}")
+        return True  # エラーでも続行
+
+
 def create_wiki_pages():
     """Wikiページを作成"""
     print("\n📚 Creating Wiki pages...")
@@ -482,6 +539,9 @@ def main():
         return 1
     
     try:
+        # Wiki初期化（存在しない場合のみ）
+        initialize_wiki_git()
+        
         # Wiki作成
         create_wiki_pages()
         
