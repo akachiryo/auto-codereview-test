@@ -3,14 +3,24 @@ name: 🚀 Team Setup
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   setup:
     runs-on: ubuntu-latest
       
     steps:
-    - name: Checkout
+    - name: Checkout main repository
       uses: actions/checkout@v4
       
+    - name: Checkout Wiki repository
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ github.repository }}.wiki
+        path: wiki
+        token: ${{ secrets.TEAM_SETUP_TOKEN }}
+        
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
@@ -24,5 +34,20 @@ jobs:
       env:
         TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
         REPO: ${{ github.repository }}
+        WIKI_PATH: ./wiki
       run: |
         python scripts/setup.py
+        
+    - name: Commit and push Wiki changes
+      if: success()
+      run: |
+        cd wiki
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        if ! git diff --staged --quiet; then
+          git commit -m "🚀 Auto-generated Wiki pages from GitHub Actions"
+          git push
+        else
+          echo "No changes to commit to Wiki"
+        fi

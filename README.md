@@ -2,22 +2,29 @@
 
 このプロジェクトは、イマココSNSの開発用リポジトリです。
 
-## 🚀 チーム開発環境自動セットアップ
+## 🚀 GitHub完結型自動化システム
 
-### ワンクリックで環境構築
+### ワンクリックで完全自動セットアップ
 
 [![🚀 Setup Team Environment](https://img.shields.io/badge/🚀_Setup-Click_to_Start-success?style=for-the-badge&logo=github)](../../actions/workflows/setup.yml)
 
-**クリックするだけで以下を自動生成：**
-- 📚 **GitHub Wiki**
-  - テーブル設計書（データベース定義）
-  - 参考リンクページ
-- 📊 **GitHub Projects**
-  - タスクビュー（Product Backlog → Sprint Backlog → In Progress → Review → Done）
-  - テストビュー（Todo → In Progress → Done）
-- 🎯 **GitHub Issues**
-  - タスク用Issues（30個）
-  - テスト用Issues（30個）
+**リポジトリをcloneしてREADME配置のボタンをワンクリックするだけで以下を完全自動生成：**
+
+- 📚 **GitHub Wiki（完全自動）**
+  - `data/imakoko_sns_tables.csv`からテーブル設計書を自動生成
+  - 参考リンクページの自動作成
+  - GitHub Actions内でWikiリポジトリに直接プッシュ
+  
+- 📊 **GitHub Projects V2（完全自動）**
+  - プロジェクト名「イマココSNS」を自動作成
+  - TaskStatusフィールド（Product Backlog → Sprint Backlog → In Progress → Review → Done）
+  - TestStatusフィールド（Not Started → In Progress → Failed/Passed → Blocked）
+  
+- 🎯 **GitHub Issues（完全自動）**
+  - `data/tasks_for_issues.csv`から自動的にタスクIssuesを作成
+  - `data/tests_for_issues.csv`から自動的にテストIssuesを作成
+  - 自動ラベル付与（task/development, test/qa）
+  - プロジェクトへの自動紐付け
 
 ### 🔑 必須: GitHub Tokenの設定
 
@@ -41,23 +48,36 @@
 ### 📖 使い方
 
 1. 上記のセットアップボタンをクリック
-2. `Run workflow` をクリック
+2. `Run workflow` をクリック  
 3. `Run workflow` ボタンをクリックして実行
 4. Actions タブで進行状況を確認
-5. 完了後、Wiki・Projects・Issuesを確認
+5. 完了後、自動生成されたリソースを確認
 
-### 📚 Wiki作成手順
+### ✨ 完全自動生成される内容
 
-自動化システム実行後、以下の手順でWikiページを作成してください：
+#### 📚 Wiki（手動作業不要！）
+- **テーブル設計書**: CSVから自動生成されたデータベース設計
+- **参考リンク**: プロジェクト関連リンクまとめ  
+- **Home**: Wiki のホームページ
+- GitHub Actions内で直接Wikiリポジトリにプッシュされます
 
-1. **Wikiページの作成**
-   - `wiki_content/` ディレクトリに生成されたMarkdownファイルを確認
-   - [Wiki](../../wiki) ページにアクセス
-   - 新しいページを作成し、生成されたコンテンツをコピー
+#### 📊 Project Views（要手動設定）
+完全自動生成後、以下の手順で2つのビューを作成してください：
 
-2. **作成されるページ**
-   - **テーブル設計書**: データベース設計の詳細（`table-design.md`）
-   - **参考リンク**: プロジェクト関連リンク集（`reference-links.md`）
+**タスクビュー作成：**
+1. [Projects](../../projects) → 作成されたプロジェクトを開く
+2. New view → Board
+3. Name: `タスク`
+4. Group by: `TaskStatus`
+5. Filter: `label:task`
+
+**テストビュー作成：**
+1. New view → Board  
+2. Name: `テスト`
+3. Group by: `TestStatus`
+4. Filter: `label:test`
+
+これで要件通りの「タスク」「テスト」の2つのビューが完成します！
 
 ## 🛠️ 開発環境
 
