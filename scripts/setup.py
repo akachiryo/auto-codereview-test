@@ -153,12 +153,12 @@ def generate_table_design() -> str:
     return content
 
 
-def get_owner_id():
-    """リポジトリオーナーのIDを取得（read:orgスコープ不要の方法）"""
-    # まずリポジトリ情報を取得してオーナー情報を得る
+def get_repository_id():
+    """リポジトリIDを取得"""
     query = """
     query($owner: String!, $name: String!) {
         repository(owner: $owner, name: $name) {
+            id
             owner {
                 id
                 __typename
@@ -173,24 +173,27 @@ def get_owner_id():
     }
     
     result = graphql_request(query, variables)
-    if result and 'repository' in result and 'owner' in result['repository']:
-        return result['repository']['owner']['id']
+    if result and 'repository' in result:
+        return {
+            'repository_id': result['repository']['id'],
+            'owner_id': result['repository']['owner']['id']
+        }
     return None
 
 
 def create_project():
-    """GitHub Projects V2を作成"""
+    """GitHub Projects V2を作成（リポジトリレベル）"""
     print("\n📊 Creating GitHub Project...")
     
-    owner_id = get_owner_id()
-    if not owner_id:
-        print("❌ Failed to get owner ID")
+    repo_info = get_repository_id()
+    if not repo_info:
+        print("❌ Failed to get repository info")
         return None
     
-    # Projects V2を作成
+    # リポジトリレベルのProjects V2を作成
     query = """
-    mutation($ownerId: ID!, $title: String!) {
-        createProjectV2(input: {ownerId: $ownerId, title: $title}) {
+    mutation($ownerId: ID!, $repositoryId: ID!, $title: String!) {
+        createProjectV2(input: {ownerId: $ownerId, repositoryId: $repositoryId, title: $title}) {
             projectV2 {
                 id
                 number
@@ -202,7 +205,8 @@ def create_project():
     """
     
     variables = {
-        'ownerId': owner_id,
+        'ownerId': repo_info['owner_id'],
+        'repositoryId': repo_info['repository_id'],
         'title': 'イマココSNS開発'
     }
     
@@ -234,7 +238,7 @@ def setup_project_fields_and_views(project_id: str):
             name: $name,
             singleSelectOptions: $options
         }) {
-            field {
+            projectV2Field {
                 ... on ProjectV2SingleSelectField {
                     id
                     name
@@ -260,8 +264,10 @@ def setup_project_fields_and_views(project_id: str):
     }
     
     result = graphql_request(create_status_field_query, variables)
-    if result:
+    if result and 'createProjectV2Field' in result:
         print("✅ Created Status field for tasks")
+    else:
+        print("⚠️ Status field creation may have issues, but project is functional")
     
     print("📋 Project fields configured successfully")
 
