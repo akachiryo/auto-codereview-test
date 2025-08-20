@@ -16,8 +16,8 @@
   - タスクビュー（Product Backlog → Sprint Backlog → In Progress → Review → Done）
   - テストビュー（Todo → In Progress → Done）
 - 🎯 **GitHub Issues**
-  - タスク用Issues（28個）
-  - テスト用Issues（234個）
+  - タスク用Issues（30個）
+  - テスト用Issues（30個）
 
 ### 🔑 必須: GitHub Tokenの設定
 
