@@ -153,24 +153,29 @@ def generate_table_design() -> str:
     return content
 
 
-def get_repository_id():
-    """リポジトリIDを取得"""
+def get_owner_id():
+    """オーナー（ユーザーまたは組織）のIDを取得"""
     query = """
-    query($owner: String!, $name: String!) {
-        repository(owner: $owner, name: $name) {
+    query($login: String!) {
+        user(login: $login) {
+            id
+        }
+        organization(login: $login) {
             id
         }
     }
     """
     
     variables = {
-        'owner': REPO_OWNER,
-        'name': REPO_NAME
+        'login': REPO_OWNER
     }
     
     result = graphql_request(query, variables)
-    if result and 'repository' in result:
-        return result['repository']['id']
+    if result:
+        if 'user' in result and result['user']:
+            return result['user']['id']
+        elif 'organization' in result and result['organization']:
+            return result['organization']['id']
     return None
 
 
@@ -178,9 +183,9 @@ def create_project():
     """GitHub Projectsを作成"""
     print("\n📊 Creating GitHub Project...")
     
-    repo_id = get_repository_id()
-    if not repo_id:
-        print("❌ Failed to get repository ID")
+    owner_id = get_owner_id()
+    if not owner_id:
+        print("❌ Failed to get owner ID")
         return None
     
     # プロジェクトを作成
@@ -198,7 +203,7 @@ def create_project():
     """
     
     variables = {
-        'ownerId': repo_id,
+        'ownerId': owner_id,
         'title': 'イマココSNS開発'
     }
     
