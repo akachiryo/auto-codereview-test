@@ -153,12 +153,16 @@ def generate_table_design() -> str:
     return content
 
 
-def get_repository_id():
-    """リポジトリIDを取得"""
+def get_owner_id():
+    """リポジトリオーナーのIDを取得（read:orgスコープ不要の方法）"""
+    # まずリポジトリ情報を取得してオーナー情報を得る
     query = """
     query($owner: String!, $name: String!) {
         repository(owner: $owner, name: $name) {
-            id
+            owner {
+                id
+                __typename
+            }
         }
     }
     """
@@ -169,73 +173,97 @@ def get_repository_id():
     }
     
     result = graphql_request(query, variables)
-    if result and 'repository' in result:
-        return result['repository']['id']
+    if result and 'repository' in result and 'owner' in result['repository']:
+        return result['repository']['owner']['id']
     return None
 
 
 def create_project():
-    """GitHub Projectsを作成（リポジトリレベル）"""
+    """GitHub Projects V2を作成"""
     print("\n📊 Creating GitHub Project...")
     
-    # REST APIを使用してリポジトリレベルのプロジェクトを作成
-    project_data = {
-        'name': 'イマココSNS開発',
-        'body': 'イマココSNS開発用のプロジェクト管理ボード'
-    }
-    
-    response = make_request(
-        'POST',
-        f"{API_BASE}/repos/{REPO}/projects",
-        json=project_data
-    )
-    
-    if response.status_code != 201:
-        print(f"❌ Failed to create project: {response.text}")
+    owner_id = get_owner_id()
+    if not owner_id:
+        print("❌ Failed to get owner ID")
         return None
     
-    project = response.json()
-    project_id = project['id']
-    print(f"✅ Created project: {project['name']} (#{project['number']})")
-    print(f"🔗 Project URL: {project['html_url']}")
+    # Projects V2を作成
+    query = """
+    mutation($ownerId: ID!, $title: String!) {
+        createProjectV2(input: {ownerId: $ownerId, title: $title}) {
+            projectV2 {
+                id
+                number
+                title
+                url
+            }
+        }
+    }
+    """
     
-    # プロジェクトのカラムを設定
-    setup_project_columns(project_id)
+    variables = {
+        'ownerId': owner_id,
+        'title': 'イマココSNS開発'
+    }
+    
+    result = graphql_request(query, variables)
+    if not result or 'createProjectV2' not in result:
+        print("❌ Failed to create project")
+        return None
+    
+    project = result['createProjectV2']['projectV2']
+    project_id = project['id']
+    print(f"✅ Created project: {project['title']} (#{project['number']})")
+    print(f"🔗 Project URL: {project['url']}")
+    
+    # プロジェクトのフィールドとビューを設定
+    setup_project_fields_and_views(project_id)
     
     return project_id
 
 
-def setup_project_columns(project_id: str):
-    """プロジェクトのカラムを設定"""
+def setup_project_fields_and_views(project_id: str):
+    """プロジェクトのフィールドとビューを設定"""
     
-    # 基本的なカラムを作成
-    columns = [
-        "Product Backlog",
-        "Sprint Backlog", 
-        "In Progress",
-        "Review",
-        "Done"
+    # ステータスフィールドを作成
+    create_status_field_query = """
+    mutation($projectId: ID!, $name: String!, $options: [ProjectV2SingleSelectFieldOptionInput!]!) {
+        createProjectV2Field(input: {
+            projectId: $projectId,
+            dataType: SINGLE_SELECT,
+            name: $name,
+            singleSelectOptions: $options
+        }) {
+            field {
+                ... on ProjectV2SingleSelectField {
+                    id
+                    name
+                }
+            }
+        }
+    }
+    """
+    
+    # タスク用ステータス
+    task_statuses = [
+        {"name": "Product Backlog", "color": "GRAY"},
+        {"name": "Sprint Backlog", "color": "BLUE"},
+        {"name": "In Progress", "color": "YELLOW"},
+        {"name": "Review", "color": "ORANGE"},
+        {"name": "Done", "color": "GREEN"}
     ]
     
-    for column_name in columns:
-        column_data = {
-            'name': column_name
-        }
-        
-        response = make_request(
-            'POST',
-            f"{API_BASE}/projects/{project_id}/columns",
-            json=column_data
-        )
-        
-        if response.status_code == 201:
-            print(f"✅ Created column: {column_name}")
-        else:
-            print(f"❌ Failed to create column {column_name}: {response.text}")
-        
-        time.sleep(0.5)  # Rate limit対策
+    variables = {
+        'projectId': project_id,
+        'name': 'Status',
+        'options': task_statuses
+    }
     
-    print("📋 Project columns configured successfully")
+    result = graphql_request(create_status_field_query, variables)
+    if result:
+        print("✅ Created Status field for tasks")
+    
+    print("📋 Project fields configured successfully")
 
 
 def create_issues(project_id: str = None):
@@ -258,9 +286,9 @@ def create_issues(project_id: str = None):
         print("🧪 Creating test issues...")
         test_issues = create_issues_from_csv(test_csv_path, 'test')
     
-    # プロジェクトにIssueを追加（Classic Projects用）
+    # プロジェクトにIssueを追加（Projects V2用）
     if project_id:
-        add_issues_to_classic_project(project_id, task_issues + test_issues)
+        add_issues_to_project_v2(project_id, task_issues + test_issues)
     
     print(f"✅ Created {len(task_issues)} task issues and {len(test_issues)} test issues")
 
@@ -311,48 +339,35 @@ def create_issues_from_csv(csv_path: str, issue_type: str) -> List[Dict]:
     return created_issues
 
 
-def add_issues_to_classic_project(project_id: str, issues: List[Dict]):
-    """IssueをClassic Projectに追加"""
+def add_issues_to_project_v2(project_id: str, issues: List[Dict]):
+    """IssueをProjects V2に追加"""
     if not issues:
         return
     
     print(f"  Adding {len(issues)} issues to project...")
     
-    # プロジェクトのカラムを取得
-    columns_response = make_request(
-        'GET',
-        f"{API_BASE}/projects/{project_id}/columns"
-    )
-    
-    if columns_response.status_code != 200:
-        print("❌ Failed to get project columns")
-        return
-    
-    columns = columns_response.json()
-    if not columns:
-        print("❌ No columns found in project")
-        return
-    
-    # 最初のカラム（Product Backlog）にIssueを追加
-    first_column_id = columns[0]['id']
+    query = """
+    mutation($projectId: ID!, $contentId: ID!) {
+        addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
+            item {
+                id
+            }
+        }
+    }
+    """
     
     for i, issue in enumerate(issues):
         if i >= 10:  # 制限対策
             print(f"  ⚠️ Limiting to first 10 issues for project addition")
             break
             
-        card_data = {
-            'content_id': issue['id'],
-            'content_type': 'Issue'
+        variables = {
+            'projectId': project_id,
+            'contentId': issue['node_id']
         }
         
-        response = make_request(
-            'POST',
-            f"{API_BASE}/projects/columns/{first_column_id}/cards",
-            json=card_data
-        )
-        
-        if response.status_code == 201:
+        result = graphql_request(query, variables)
+        if result and 'addProjectV2ItemById' in result:
             print(f"    ✅ Added to project: {issue['title'][:40]}...")
         else:
             print(f"    ❌ Failed to add: {issue['title'][:40]}...")
