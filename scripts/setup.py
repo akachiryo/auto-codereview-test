@@ -250,11 +250,11 @@ def setup_project_fields_and_views(project_id: str):
     
     # タスク用ステータス
     task_statuses = [
-        {"name": "Product Backlog", "color": "GRAY"},
-        {"name": "Sprint Backlog", "color": "BLUE"},
-        {"name": "In Progress", "color": "YELLOW"},
-        {"name": "Review", "color": "ORANGE"},
-        {"name": "Done", "color": "GREEN"}
+        {"name": "Product Backlog", "color": "GRAY", "description": "プロダクトバックログ - 実装予定の機能やタスク"},
+        {"name": "Sprint Backlog", "color": "BLUE", "description": "スプリントバックログ - 現在のスプリントで実装するタスク"},
+        {"name": "In Progress", "color": "YELLOW", "description": "進行中 - 現在開発中のタスク"},
+        {"name": "Review", "color": "ORANGE", "description": "レビュー中 - コードレビューやテスト中のタスク"},
+        {"name": "Done", "color": "GREEN", "description": "完了 - 実装とテストが完了したタスク"}
     ]
     
     variables = {
@@ -405,7 +405,12 @@ def main():
         print(f"  1. Go to https://github.com/{REPO}/wiki to create Wiki pages")
         print(f"  2. Copy content from wiki_content/ directory")
         print(f"  3. Check Projects at https://github.com/{REPO}/projects")
-        print(f"  4. Review Issues at https://github.com/{REPO}/issues")
+        print(f"  4. 🔧 Manual setup required: Set board as default view")
+        print(f"     - Open your project URL")
+        print(f"     - Click the view dropdown (currently 'Table')")
+        print(f"     - Select 'Board' view")
+        print(f"     - Click the '⋯' menu and select 'Set as default view'")
+        print(f"  5. Review Issues at https://github.com/{REPO}/issues")
         
         return 0
         
