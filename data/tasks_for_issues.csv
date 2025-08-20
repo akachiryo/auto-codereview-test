@@ -1,225 +1,140 @@
 title,body,labels,assignee,milestone,priority
-タスク 1: 実装タスク,# 概要,"task,development",,,medium
-タスク 3: ,[イマココSNS用ベース](https://github.com/prum-jp/imakoko-base),"task,development",,,medium
-タスク 5: ,1. 上記テンプレートを利用して、メンバー内の誰かの個人のリポジトリにプロジェクトを作成する（private）,"task,development",,,medium
-タスク 6: ,2. メンバー全員、担当メンターを招待する,"task,development",,,medium
-タスク 7: ,3. それぞれ環境構築を実施する,"task,development",,,medium
-タスク 8: ,4. ローカルで初期画面が表示されたらOK,"task,development",,,medium
-タスク 10: ,# 完了条件,"task,development",,,medium
-タスク 12: ,メンバー全員が上記の環境構築を完了する,"task,development",,,medium
-タスク 13: 実装タスク,# 概要,"task,development",,,medium
-タスク 15: ,DB設計書通りのデータベースを作成する,"task,development",,,medium
-タスク 17: ,# 完了条件,"task,development",,,medium
-タスク 19: ,* [ ] チーム内レビューが完了する,"task,development",,,medium
-タスク 20: 実装タスク,# 概要,"task,development",,,medium
-タスク 22: ,各チームのGoogleドライブにある「ルーティング定義書」にルーティングを定義する,"task,development",,,medium
-タスク 24: ,# 完了条件,"task,development",,,medium
-タスク 26: ,* [ ] チーム内レビューが完了する,"task,development",,,medium
-タスク 27: 実装タスク,# 概要,"task,development",,,medium
-タスク 29: ,Users、Followsのseedを作成する,"task,development",,,medium
-タスク 31: ,# 完了条件,"task,development",,,medium
-タスク 33: ,* [ ] Users、Followsのseedを作成する,"task,development",,,medium
-タスク 34: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 35: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 36: 実装タスク,# 概要,"task,development",,,medium
-タスク 38: ,* ユーザー登録機能を実装する,"task,development",,,medium
-タスク 40: ,要件：,"task,development",,,medium
-タスク 42: ,[Figma](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/%E3%82%A4%E3%83%9E%E3%82%B3%E3%82%B3SNS?type=design&node-id=24-57&mode=design&t=b6ZlLFIYKdS56SVZ-0),"task,development",,,medium
-タスク 44: ,# 完了条件,"task,development",,,medium
-タスク 45: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 46: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 47: 実装タスク,# 概要,"task,development",,,medium
-タスク 49: ,* ログイン機能を実装する,"task,development",,,medium
-タスク 51: ,要件：,"task,development",,,medium
-タスク 53: ,[Figma](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/%E3%82%A4%E3%83%9E%E3%82%B3%E3%82%B3SNS?type=design&node-id=24-32&mode=design&t=b6ZlLFIYKdS56SVZ-0),"task,development",,,medium
-タスク 55: ,# 完了条件,"task,development",,,medium
-タスク 56: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 57: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 58: 実装タスク,# 概要,"task,development",,,medium
-タスク 60: ,要件：,"task,development",,,medium
-タスク 62: ,* ログアウト機能を実装する,"task,development",,,medium
-タスク 64: ,[Figma](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/%E3%82%A4%E3%83%9E%E3%82%B3%E3%82%B3SNS?type=design&node-id=58-327&mode=design&t=WCt5rxtAIB1Wj5sF-0),"task,development",,,medium
-タスク 67: ,# 完了条件,"task,development",,,medium
-タスク 68: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 69: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 70: 実装タスク,# 概要,"task,development",,,medium
-タスク 72: ,![image][pasted-2023.08.02-20.58.10.png],"task,development",,,medium
-タスク 74: ,# 完了条件,"task,development",,,medium
-タスク 75: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 76: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 77: 実装タスク,# 概要,"task,development",,,medium
-タスク 79: ,要件：,"task,development",,,medium
-タスク 81: ,* ログインユーザーのアイコンをクリックすると遷移する,"task,development",,,medium
-タスク 82: ,* ログインユーザーのホーム,"task,development",,,medium
-タスク 83: ,* 赤枠以外の部分は別チケットで対応する,"task,development",,,medium
-タスク 85: ,![image][pasted-2023.08.02-21.01.12.png],"task,development",,,medium
-タスク 87: ,# 完了条件,"task,development",,,medium
-タスク 88: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 89: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 90: 実装タスク,# 概要,"task,development",,,medium
-タスク 92: ,要件：,"task,development",,,medium
-タスク 94: ,* ログインユーザーの投稿したツイートが一覧で表示される（返信は除く）,"task,development",,,medium
-タスク 95: ,* 日時の降順で表示される,"task,development",,,medium
-タスク 97: ,[Figma](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/%E3%82%A4%E3%83%9E%E3%82%B3%E3%82%B3SNS?type=design&node-id=56-105&mode=design&t=WCt5rxtAIB1Wj5sF-0),"task,development",,,medium
-タスク 99: ,# 完了条件,"task,development",,,medium
-タスク 100: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 101: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 102: 実装タスク,# 概要,"task,development",,,medium
-タスク 104: ,要件：,"task,development",,,medium
-タスク 105: ,* ログインユーザーの投稿したツイートと返信が一覧で表示される,"task,development",,,medium
-タスク 106: ,* 日付の降順で表示される,"task,development",,,medium
-タスク 108: ,[Figma](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/%E3%82%A4%E3%83%9E%E3%82%B3%E3%82%B3SNS?type=design&node-id=81-2203&mode=design&t=WCt5rxtAIB1Wj5sF-0),"task,development",,,medium
-タスク 110: ,# 完了条件,"task,development",,,medium
-タスク 111: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 112: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 113: 実装タスク,# 概要,"task,development",,,medium
-タスク 115: ,要件：,"task,development",,,medium
-タスク 117: ,* TOP画面,"task,development",,,medium
-タスク 118: ,* 自分の投稿、フォロワーの投稿、非フォロワーなど含む全ての投稿が表示される,"task,development",,,medium
-タスク 119: ,* 日付の降順,"task,development",,,medium
-タスク 121: ,[Figma](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/%E3%82%A4%E3%83%9E%E3%82%B3%E3%82%B3SNS?type=design&node-id=41-463&mode=design&t=WCt5rxtAIB1Wj5sF-0),"task,development",,,medium
-タスク 123: ,# 完了条件,"task,development",,,medium
-タスク 124: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 125: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 126: 実装タスク,# 概要,"task,development",,,medium
-タスク 128: ,要件：,"task,development",,,medium
-タスク 130: ,* TOP上部からツイートを入力し、投稿できる,"task,development",,,medium
-タスク 131: ,* 投稿したら一緒に現在地のGoogleMap画面が添付される,"task,development",,,medium
-タスク 132: ,* 現在地の取得には外部APIを利用すること（例：Google Maps API）,"task,development",,,medium
-タスク 134: ,[Figma](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/%E3%82%A4%E3%83%9E%E3%82%B3%E3%82%B3SNS?type=design&node-id=115-23&mode=design&t=WCt5rxtAIB1Wj5sF-0),"task,development",,,medium
-タスク 136: ,# 完了条件,"task,development",,,medium
-タスク 137: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 138: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 139: 実装タスク,# 概要,"task,development",,,medium
-タスク 141: ,要件：,"task,development",,,medium
-タスク 143: ,* サイドバー「ツイートをする」からツイートを入力し、投稿できる,"task,development",,,medium
-タスク 144: ,* 投稿したら一緒に現在地のGoogleMap画面が添付される,"task,development",,,medium
-タスク 145: ,* 現在地の取得には外部APIを利用すること（例：Google Maps API）,"task,development",,,medium
-タスク 147: ,[Figma](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/%E3%82%A4%E3%83%9E%E3%82%B3%E3%82%B3SNS?type=design&node-id=66-981&mode=design&t=WCt5rxtAIB1Wj5sF-0),"task,development",,,medium
-タスク 149: ,# 完了条件,"task,development",,,medium
-タスク 150: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 151: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 152: 実装タスク,# 概要,"task,development",,,medium
-タスク 154: ,要件：,"task,development",,,medium
-タスク 156: ,* ツイートに対してコメントができる,"task,development",,,medium
-タスク 157: ,* コメントには現在地は添付されない,"task,development",,,medium
-タスク 159: ,[Figma](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/%E3%82%A4%E3%83%9E%E3%82%B3%E3%82%B3SNS?type=design&node-id=115-118&mode=design&t=WCt5rxtAIB1Wj5sF-0),"task,development",,,medium
-タスク 161: ,![image][pasted-2023.08.03-22.51.17.png],"task,development",,,medium
-タスク 163: ,# 完了条件,"task,development",,,medium
-タスク 164: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 165: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 166: 実装タスク,# 概要,"task,development",,,medium
-タスク 168: ,要件：,"task,development",,,medium
-タスク 170: ,* コメントに対してコメントができる,"task,development",,,medium
-タスク 171: ,* 現在地は添付されない,"task,development",,,medium
-タスク 173: ,[Figma](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/%E3%82%A4%E3%83%9E%E3%82%B3%E3%82%B3SNS?type=design&node-id=76-2005&mode=design&t=rFUzexVaMU0lhSlp-0),"task,development",,,medium
-タスク 175: ,# 完了条件,"task,development",,,medium
-タスク 176: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 177: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 178: 実装タスク,# 概要,"task,development",,,medium
-タスク 180: ,要件：,"task,development",,,medium
-タスク 182: ,ツイートのコメントアイコン（吹き出しアイコン）をクリックすると表示される,"task,development",,,medium
-タスク 183: ,紐づくコメントが日時の降順で表示される,"task,development",,,medium
-タスク 185: ,# 完了条件,"task,development",,,medium
-タスク 186: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 187: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 188: 実装タスク,# 概要,"task,development",,,medium
-タスク 190: ,要件：,"task,development",,,medium
-タスク 192: ,ログインユーザーがフォローしているユーザーの一覧,"task,development",,,medium
-タスク 194: ,# 完了条件,"task,development",,,medium
-タスク 195: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 196: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 197: 実装タスク,# 概要,"task,development",,,medium
-タスク 199: ,要件：,"task,development",,,medium
-タスク 201: ,ログインユーザーをフォローしているユーザー一覧,"task,development",,,medium
-タスク 203: ,# 完了条件,"task,development",,,medium
-タスク 204: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 205: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 206: 実装タスク,# 概要,"task,development",,,medium
-タスク 208: ,要件：,"task,development",,,medium
-タスク 210: ,自分以外のユーザーのホーム画面の「フォロー」ボタンをクリックするとフォローできる→「フォロー中」に切り替わる,"task,development",,,medium
-タスク 211: ,フォロー状態で「フォロー中」ボタンをクリックするとフォロー解除できる→「フォロー」ボタンに切り替わる,"task,development",,,medium
-タスク 212: ,フォローを解除する時には確認モーダルが表示される,"task,development",,,medium
-タスク 214: ,# 完了条件,"task,development",,,medium
-タスク 215: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 216: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 217: 実装タスク,# 概要,"task,development",,,medium
-タスク 219: ,要件：,"task,development",,,medium
-タスク 221: ,フォロー一覧画面の「フォロー中」ボタンをクリックするとフォロー解除できる→「フォロー」に切り替わる,"task,development",,,medium
-タスク 222: ,フォロー解除状態で「フォロー」ボタンをクリックするとフォローできる→「フォロー中」ボタンに切り替わる,"task,development",,,medium
-タスク 223: ,フォローを解除する時には確認モーダルが表示される,"task,development",,,medium
-タスク 225: ,# 完了条件,"task,development",,,medium
-タスク 226: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 227: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 228: 実装タスク,# 概要,"task,development",,,medium
-タスク 230: ,要件：,"task,development",,,medium
-タスク 232: ,フォロワー一覧画面の「フォロー中」ボタンをクリックするとフォロー解除できる→「フォロー」に切り替わる,"task,development",,,medium
-タスク 233: ,フォロー解除状態で「フォロー」ボタンをクリックするとフォローできる→「フォロー中」ボタンに切り替わる,"task,development",,,medium
-タスク 234: ,フォローを解除する時には確認モーダルが表示される,"task,development",,,medium
-タスク 236: ,# 完了条件,"task,development",,,medium
-タスク 237: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 238: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 239: 実装タスク,# 概要,"task,development",,,medium
-タスク 241: ,要件：,"task,development",,,medium
-タスク 243: ,自分以外のユーザーのアイコンをクリックすると遷移する画面,"task,development",,,medium
-タスク 245: ,# 完了条件,"task,development",,,medium
-タスク 246: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 247: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 248: 実装タスク,# 概要,"task,development",,,medium
-タスク 250: ,要件：,"task,development",,,medium
-タスク 252: ,ツイート、返信のハートアイコンをクリックすると、ハートの色がピンクになる（いいね状態）,"task,development",,,medium
-タスク 253: ,ハートがピンクの状態で、再度クリックするとハートの色がなくなる（いいね解除）,"task,development",,,medium
-タスク 254: ,いいね数はカウントされる,"task,development",,,medium
-タスク 255: ,解除したら減る,"task,development",,,medium
-タスク 256: ,非同期処理で実装すること（JavaScriptでの実装）,"task,development",,,medium
-タスク 258: ,# 完了条件,"task,development",,,medium
-タスク 259: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 260: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 261: 実装タスク,# 概要,"task,development",,,medium
-タスク 263: ,要件：,"task,development",,,medium
-タスク 264: ,* ツイートへのコメントの編集（ツイートは編集できない仕様のためコメントのみ）,"task,development",,,medium
-タスク 265: ,* ペンのマークをクリックすると編集できる,"task,development",,,medium
-タスク 266: ,* エンター or 選択解除で編集が確定する,"task,development",,,medium
-タスク 268: ,# 完了条件,"task,development",,,medium
-タスク 269: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 270: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 271: 実装タスク,# 概要,"task,development",,,medium
-タスク 273: ,要件：,"task,development",,,medium
-タスク 274: ,ツイートを削除する,"task,development",,,medium
-タスク 275: ,ツイートのゴミ箱マークをクリックで確認モーダルが表示される,"task,development",,,medium
-タスク 276: ,削除すると、紐づくコメントも削除される,"task,development",,,medium
-タスク 278: ,# 完了条件,"task,development",,,medium
-タスク 279: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 280: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 281: 実装タスク,# 概要,"task,development",,,medium
-タスク 283: ,要件：,"task,development",,,medium
-タスク 285: ,コメントを削除する,"task,development",,,medium
-タスク 286: ,コメントのゴミ箱マークをクリックで確認モーダルが表示される,"task,development",,,medium
-タスク 288: ,# 完了条件,"task,development",,,medium
-タスク 289: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 290: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 291: 実装タスク,# 概要,"task,development",,,medium
-タスク 293: ,要件：,"task,development",,,medium
-タスク 294: ,* サイドバーの設定をクリックすることで表示されるトグルメニューを実装する,"task,development",,,medium
-タスク 296: ,# 完了条件,"task,development",,,medium
-タスク 297: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 298: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 299: 実装タスク,# 概要,"task,development",,,medium
-タスク 301: ,要件：,"task,development",,,medium
-タスク 303: ,サイドバーの設定をクリック→アカウント削除→確認モーダルが表示→パスワード確認→削除,"task,development",,,medium
-タスク 305: ,# 完了条件,"task,development",,,medium
-タスク 306: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 307: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 308: 実装タスク,# 概要,"task,development",,,medium
-タスク 310: ,要件：,"task,development",,,medium
-タスク 312: ,サイドバーの設定をクリック→アカウント情報→編集ページに遷移→編集確定,"task,development",,,medium
-タスク 314: ,# 完了条件,"task,development",,,medium
-タスク 315: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 316: ,* [ ] mainブランチにマージ,"task,development",,,medium
-タスク 317: 実装タスク,# 概要,"task,development",,,medium
-タスク 319: ,要件：,"task,development",,,medium
-タスク 321: ,サイドバーのプロフィールをクリック→プロフィール編集モーダルが表示される→編集,"task,development",,,medium
-タスク 322: ,画像も変更できる,"task,development",,,medium
-タスク 324: ,# 完了条件,"task,development",,,medium
-タスク 325: ,* [ ] チーム内レビュー,"task,development",,,medium
-タスク 326: ,* [ ] mainブランチにマージ,"task,development",,,medium
+"タスク1: 環境構築","# 概要
+[イマココSNS用ベース](https://github.com/prum-jp/imakoko-base)を使用してチーム開発環境を構築する
+
+## 手順
+1. 上記テンプレートを利用して、メンバー内の誰かの個人のリポジトリにプロジェクトを作成する（private）
+2. メンバー全員、担当メンターを招待する
+3. それぞれ環境構築を実施する
+4. ローカルで初期画面が表示されたらOK
+
+# 完了条件
+- [ ] メンバー全員が上記の環境構築を完了する","task,development",,,medium
+"タスク2: データベース設計・実装","# 概要
+DB設計書通りのデータベースを作成する
+
+# 完了条件
+- [ ] チーム内レビューが完了する","task,development",,,medium
+"タスク3: ルーティング定義","# 概要
+各チームのGoogleドライブにある「ルーティング定義書」にルーティングを定義する
+
+# 完了条件
+- [ ] チーム内レビューが完了する","task,development",,,medium
+"タスク4: Seed作成","# 概要
+Users、Followsのseedを作成する
+
+# 完了条件
+- [ ] Users、Followsのseedを作成する
+- [ ] チーム内レビュー
+- [ ] mainブランチにマージ","task,development",,,medium
+"タスク5: ユーザー登録機能実装","# 概要
+ユーザー登録機能を実装する
+
+## 要件
+[Figma](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/%E3%82%A4%E3%83%9E%E3%82%B3%E3%82%B3SNS?type=design&node-id=24-57&mode=design&t=b6ZlLFIYKdS56SVZ-0)
+
+# 完了条件
+- [ ] チーム内レビュー
+- [ ] mainブランチにマージ","task,development",,,medium
+"タスク6: ログイン機能実装","# 概要
+ログイン機能を実装する
+
+## 要件
+[Figma](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/%E3%82%A4%E3%83%9E%E3%82%B3%E3%82%B3SNS?type=design&node-id=24-32&mode=design&t=b6ZlLFIYKdS56SVZ-0)
+
+# 完了条件
+- [ ] チーム内レビュー
+- [ ] mainブランチにマージ","task,development",,,medium
+"タスク7: ログアウト機能実装","# 概要
+ログアウト機能を実装する
+
+## 要件
+[Figma](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/%E3%82%A4%E3%83%9E%E3%82%B3%E3%82%B3SNS?type=design&node-id=58-327&mode=design&t=WCt5rxtAIB1Wj5sF-0)
+
+# 完了条件
+- [ ] チーム内レビュー
+- [ ] mainブランチにマージ","task,development",,,medium
+"タスク8: プロフィール画面実装","# 概要
+プロフィール画面を実装する
+
+![image][pasted-2023.08.02-20.58.10.png]
+
+# 完了条件
+- [ ] チーム内レビュー
+- [ ] mainブランチにマージ","task,development",,,medium
+"タスク9: フォロー機能実装","# 概要
+フォロー・アンフォロー機能を実装する
+
+## 要件
+- ユーザーをフォロー・アンフォローできる機能
+- フォロー状態の表示
+
+# 完了条件
+- [ ] チーム内レビュー
+- [ ] mainブランチにマージ","task,development",,,medium
+"タスク10: 投稿機能実装","# 概要
+投稿機能を実装する
+
+## 要件
+- テキスト投稿機能
+- 画像投稿機能
+- 投稿一覧表示
+
+# 完了条件
+- [ ] チーム内レビュー
+- [ ] mainブランチにマージ","task,development",,,medium
+"タスク11: いいね機能実装","# 概要
+いいね機能を実装する
+
+## 要件
+- 投稿にいいねできる機能
+- いいね数の表示
+- いいね状態の管理
+
+# 完了条件
+- [ ] チーム内レビュー
+- [ ] mainブランチにマージ","task,development",,,medium
+"タスク12: コメント機能実装","# 概要
+コメント機能を実装する
+
+## 要件
+- 投稿にコメントできる機能
+- コメント一覧表示
+- コメント削除機能
+
+# 完了条件
+- [ ] チーム内レビュー
+- [ ] mainブランチにマージ","task,development",,,medium
+"タスク13: 通知機能実装","# 概要
+通知機能を実装する
+
+## 要件
+- フォローされた時の通知
+- いいねされた時の通知
+- コメントされた時の通知
+
+# 完了条件
+- [ ] チーム内レビュー
+- [ ] mainブランチにマージ","task,development",,,medium
+"タスク14: 検索機能実装","# 概要
+検索機能を実装する
+
+## 要件
+- ユーザー検索
+- 投稿検索
+- ハッシュタグ検索
+
+# 完了条件
+- [ ] チーム内レビュー
+- [ ] mainブランチにマージ","task,development",,,medium
+"タスク15: 設定画面実装","# 概要
+設定画面を実装する
+
+## 要件
+- プロフィール編集
+- パスワード変更
+- アカウント削除
+
+# 完了条件
+- [ ] チーム内レビュー
+- [ ] mainブランチにマージ","task,development",,,medium

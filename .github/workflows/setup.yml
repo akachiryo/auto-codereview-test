@@ -31,6 +31,11 @@ jobs:
       run: |
         python scripts/setup.py
         
+    - name: Wait for Wiki initialization
+      run: |
+        echo "Waiting for Wiki to be properly initialized..."
+        sleep 5
+        
     - name: Clone Wiki repository (after initialization)
       uses: actions/checkout@v4
       with:
@@ -38,9 +43,29 @@ jobs:
         path: wiki
         token: ${{ secrets.TEAM_SETUP_TOKEN }}
       continue-on-error: true
+      
+    - name: Handle Wiki initialization if needed
+      if: failure()
+      run: |
+        echo "Wiki repository not found, creating initial structure..."
+        mkdir -p wiki
+        cd wiki
+        git init
+        git config user.email "action@github.com"
+        git config user.name "GitHub Action"
+        
+        # Create initial Home.md
+        echo "# Welcome to the Wiki!" > Home.md
+        echo "" >> Home.md
+        echo "This is the initial page to create the Wiki repository." >> Home.md
+        echo "This will be automatically updated by the setup process." >> Home.md
+        
+        git add .
+        git commit -m "🌟 Initialize Wiki repository"
+        git remote add origin https://${{ secrets.TEAM_SETUP_TOKEN }}@github.com/${{ github.repository }}.wiki.git
+        git push --set-upstream origin master || git push --set-upstream origin main
         
     - name: Update Wiki with generated content
-      if: success()
       env:
         TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
         REPO: ${{ github.repository }}
@@ -56,7 +81,6 @@ jobs:
         "
         
     - name: Commit and push Wiki changes
-      if: success()
       run: |
         if [ -d "wiki" ]; then
           cd wiki
@@ -65,7 +89,7 @@ jobs:
           git add .
           if ! git diff --staged --quiet; then
             git commit -m "🚀 Auto-generated Wiki pages from GitHub Actions"
-            git push
+            git push --set-upstream origin master 2>/dev/null || git push --set-upstream origin main 2>/dev/null || git push
           else
             echo "No changes to commit to Wiki"
           fi
