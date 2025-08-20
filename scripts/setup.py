@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 """
-GitHub自動セットアップスクリプト
-Wiki、Projects、Issuesを自動生成
+GitHub完結型自動化システム - シンプル実装版
+Wiki、Projects、Issuesを自動生成するスクリプト
 """
 
 import os
-import json
 import time
 import csv
 import requests
-from typing import Dict, List, Any
+from typing import Dict, List
 
 # 環境変数から設定を取得
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
@@ -59,7 +58,7 @@ def graphql_request(query: str, variables: Dict = None) -> Dict:
     return data.get('data', {})
 
 
-def create_wiki():
+def create_wiki_pages():
     """Wikiページを作成"""
     print("\n📚 Creating Wiki pages...")
     
@@ -67,18 +66,22 @@ def create_wiki():
     tables_content = generate_table_design()
     
     # 参考リンクページの作成
-    links_content = """# 参考リンク
+    links_content = f"""# 参考リンク
 
 ## チーム開発説明資料
 - [チーム開発説明資料](https://docs.google.com/presentation/d/1XO9Ru_5e85g63vwidmGGKmOZdUMKjqPG/edit?slide=id.p1#slide=id.p1)
 
 ## プロジェクト関連リンク
-- [Issues](https://github.com/{repo}/issues)
-- [Projects](https://github.com/{repo}/projects)
-- [Discussions](https://github.com/{repo}/discussions)
-""".format(repo=REPO)
+- [Issues](https://github.com/{REPO}/issues)
+- [Projects](https://github.com/{REPO}/projects)
+- [Discussions](https://github.com/{REPO}/discussions)
+
+## 開発関連リンク
+- [Figma デザイン](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/イマココSNS)
+- [GitHub ベースリポジトリ](https://github.com/prum-jp/imakoko-base)
+"""
     
-    # Wiki content をファイルとして保存（手動でWikiに貼り付け用）
+    # Wiki content をファイルとして保存（GitHub API経由では直接作成不可のため）
     os.makedirs('wiki_content', exist_ok=True)
     
     with open('wiki_content/table-design.md', 'w', encoding='utf-8') as f:
@@ -88,7 +91,7 @@ def create_wiki():
         f.write(links_content)
     
     print("📝 Wiki content saved to wiki_content/ directory")
-    print("   Please manually create Wiki pages with the generated content")
+    print("📌 Manual step required: Please create Wiki pages with the generated content")
 
 
 def generate_table_design() -> str:
@@ -114,7 +117,10 @@ def generate_table_design() -> str:
                     'role': row['table_role'],
                     'columns': []
                 }
-            tables[table_name]['columns'].append(row)
+            
+            # 空のカラムは除外
+            if row['logical_name'] and row['physical_name']:
+                tables[table_name]['columns'].append(row)
         
         # 各テーブルの情報を出力
         for table_name, table_info in tables.items():
@@ -147,32 +153,50 @@ def generate_table_design() -> str:
     return content
 
 
-def create_projects():
-    """GitHub Projectsを作成"""
-    print("\n📊 Creating Projects...")
-    
-    # GraphQLでプロジェクトを作成
+def get_repository_id():
+    """リポジトリIDを取得"""
     query = """
-    mutation($ownerId: ID!, $title: String!) {
-      createProjectV2(input: {ownerId: $ownerId, title: $title}) {
-        projectV2 {
-          id
-          number
-          title
+    query($owner: String!, $name: String!) {
+        repository(owner: $owner, name: $name) {
+            id
         }
-      }
     }
     """
     
-    # リポジトリIDを取得
-    repo_data = make_request('GET', f"{API_BASE}/repos/{REPO}")
-    if repo_data.status_code != 200:
-        print(f"❌ Failed to get repository info: {repo_data.text}")
-        return
+    variables = {
+        'owner': REPO_OWNER,
+        'name': REPO_NAME
+    }
     
-    repo_id = repo_data.json()['node_id']
+    result = graphql_request(query, variables)
+    if result and 'repository' in result:
+        return result['repository']['id']
+    return None
+
+
+def create_project():
+    """GitHub Projectsを作成"""
+    print("\n📊 Creating GitHub Project...")
+    
+    repo_id = get_repository_id()
+    if not repo_id:
+        print("❌ Failed to get repository ID")
+        return None
     
     # プロジェクトを作成
+    query = """
+    mutation($ownerId: ID!, $title: String!) {
+        createProjectV2(input: {ownerId: $ownerId, title: $title}) {
+            projectV2 {
+                id
+                number
+                title
+                url
+            }
+        }
+    }
+    """
+    
     variables = {
         'ownerId': repo_id,
         'title': 'イマココSNS開発'
@@ -186,6 +210,7 @@ def create_projects():
     project = result['createProjectV2']['projectV2']
     project_id = project['id']
     print(f"✅ Created project: {project['title']} (#{project['number']})")
+    print(f"🔗 Project URL: {project['url']}")
     
     # プロジェクトのフィールドとビューを設定
     setup_project_fields_and_views(project_id)
@@ -196,26 +221,22 @@ def create_projects():
 def setup_project_fields_and_views(project_id: str):
     """プロジェクトのフィールドとビューを設定"""
     
-    # ステータスフィールドを作成
+    # ステータスフィールドを作成（タスク用）
     create_status_field_query = """
-    mutation($projectId: ID!, $name: String!, $options: [ProjectV2SingleSelectFieldOptionInput!]) {
-      createProjectV2Field(input: {
-        projectId: $projectId,
-        dataType: SINGLE_SELECT,
-        name: $name,
-        singleSelectOptions: $options
-      }) {
-        field {
-          ... on ProjectV2SingleSelectField {
-            id
-            name
-            options {
-              id
-              name
+    mutation($projectId: ID!, $name: String!, $options: [ProjectV2SingleSelectFieldOptionInput!]!) {
+        createProjectV2Field(input: {
+            projectId: $projectId,
+            dataType: SINGLE_SELECT,
+            name: $name,
+            singleSelectOptions: $options
+        }) {
+            field {
+                ... on ProjectV2SingleSelectField {
+                    id
+                    name
+                }
             }
-          }
         }
-      }
     }
     """
     
@@ -236,7 +257,7 @@ def setup_project_fields_and_views(project_id: str):
     
     result = graphql_request(create_status_field_query, variables)
     if result:
-        print("✅ Created Status field for project")
+        print("✅ Created Status field for tasks")
     
     # テスト用ステータス
     test_statuses = [
@@ -253,15 +274,17 @@ def setup_project_fields_and_views(project_id: str):
     
     result = graphql_request(create_status_field_query, variables)
     if result:
-        print("✅ Created Test Status field for project")
+        print("✅ Created Test Status field")
+    
+    print("📋 Project fields configured successfully")
 
 
 def create_issues(project_id: str = None):
     """CSVファイルからIssuesを作成"""
     print("\n🎯 Creating Issues...")
     
-    task_csv_path = 'data/imakoko_sns_task_template.csv'
-    test_csv_path = 'data/imakoko_sns_test_template.csv'
+    task_csv_path = 'data/tasks_for_issues.csv'
+    test_csv_path = 'data/tests_for_issues.csv'
     
     task_issues = []
     test_issues = []
@@ -278,8 +301,8 @@ def create_issues(project_id: str = None):
     
     # プロジェクトにIssueを追加
     if project_id:
-        add_issues_to_project(project_id, task_issues, 'Product Backlog')
-        add_issues_to_project(project_id, test_issues, 'Todo')
+        add_issues_to_project(project_id, task_issues, 'task')
+        add_issues_to_project(project_id, test_issues, 'test')
     
     print(f"✅ Created {len(task_issues)} task issues and {len(test_issues)} test issues")
 
@@ -292,38 +315,20 @@ def create_issues_from_csv(csv_path: str, issue_type: str) -> List[Dict]:
         with open(csv_path, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             
-            for row in reader:
-                # タスクCSVの場合
-                if 'title' in row:
-                    title = row['title']
-                    body = row.get('description', '')
-                    labels = row.get('labels', '').split(',')
-                # テストCSVの場合
-                elif 'item' in row:
-                    title = f"テスト: {row['screen']} - {row['item']}"
-                    body = f"""## テストタイプ
-{row.get('type', '')}
-
-## 画面
-{row.get('screen', '')}
-
-## カテゴリ
-{row.get('category', '')}
-
-## 確認手順
-{row.get('procedure', '')}
-
-## 期待値
-{row.get('expected', '')}"""
-                    labels = row.get('labels', 'test').split(',')
-                else:
-                    continue
+            for i, row in enumerate(reader, 1):
+                if i > 30:  # 最初の30件のみ作成（制限対策）
+                    print(f"⚠️ Limiting to first 30 {issue_type} issues to avoid rate limits")
+                    break
+                    
+                title = row['title']
+                body = row['body']
+                labels = [label.strip() for label in row['labels'].split(',') if label.strip()]
                 
                 # Issue作成
                 issue_data = {
                     'title': title,
                     'body': body,
-                    'labels': [label.strip() for label in labels if label.strip()]
+                    'labels': labels
                 }
                 
                 response = make_request(
@@ -335,12 +340,12 @@ def create_issues_from_csv(csv_path: str, issue_type: str) -> List[Dict]:
                 if response.status_code == 201:
                     issue = response.json()
                     created_issues.append(issue)
-                    print(f"  ✅ Created: {title}")
+                    print(f"  ✅ Created: {title[:50]}...")
                 else:
-                    print(f"  ❌ Failed: {title} - {response.text}")
+                    print(f"  ❌ Failed: {title[:50]}... - {response.text}")
                 
                 # Rate limit対策
-                time.sleep(0.5)
+                time.sleep(1)
                 
     except Exception as e:
         print(f"❌ Error reading CSV: {str(e)}")
@@ -348,24 +353,28 @@ def create_issues_from_csv(csv_path: str, issue_type: str) -> List[Dict]:
     return created_issues
 
 
-def add_issues_to_project(project_id: str, issues: List[Dict], status: str):
+def add_issues_to_project(project_id: str, issues: List[Dict], issue_type: str):
     """IssueをProjectに追加"""
     if not issues:
         return
     
-    print(f"  Adding {len(issues)} issues to project...")
+    print(f"  Adding {len(issues)} {issue_type} issues to project...")
     
     query = """
     mutation($projectId: ID!, $contentId: ID!) {
-      addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
-        item {
-          id
+        addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
+            item {
+                id
+            }
         }
-      }
     }
     """
     
-    for issue in issues:
+    for i, issue in enumerate(issues):
+        if i >= 20:  # 制限対策
+            print(f"  ⚠️ Limiting to first 20 issues per type for project addition")
+            break
+            
         variables = {
             'projectId': project_id,
             'contentId': issue['node_id']
@@ -373,9 +382,9 @@ def add_issues_to_project(project_id: str, issues: List[Dict], status: str):
         
         result = graphql_request(query, variables)
         if result:
-            print(f"    ✅ Added to project: {issue['title']}")
+            print(f"    ✅ Added to project: {issue['title'][:40]}...")
         
-        time.sleep(0.3)
+        time.sleep(0.5)
 
 
 def main():
@@ -387,23 +396,28 @@ def main():
         print("❌ Error: GITHUB_TOKEN and REPO environment variables are required")
         return 1
     
-    # Wiki作成
-    create_wiki()
-    
-    # Projects作成
-    project_id = create_projects()
-    
-    # Issues作成
-    create_issues(project_id)
-    
-    print("\n✨ Setup completed!")
-    print(f"📌 Next steps:")
-    print(f"  1. Go to https://github.com/{REPO}/wiki to create Wiki pages")
-    print(f"  2. Copy content from wiki_content/ directory")
-    print(f"  3. Check Projects at https://github.com/{REPO}/projects")
-    print(f"  4. Review Issues at https://github.com/{REPO}/issues")
-    
-    return 0
+    try:
+        # Wiki作成
+        create_wiki_pages()
+        
+        # Projects作成
+        project_id = create_project()
+        
+        # Issues作成
+        create_issues(project_id)
+        
+        print("\n✨ Setup completed!")
+        print(f"📌 Next steps:")
+        print(f"  1. Go to https://github.com/{REPO}/wiki to create Wiki pages")
+        print(f"  2. Copy content from wiki_content/ directory")
+        print(f"  3. Check Projects at https://github.com/{REPO}/projects")
+        print(f"  4. Review Issues at https://github.com/{REPO}/issues")
+        
+        return 0
+        
+    except Exception as e:
+        print(f"\n❌ Error during setup: {str(e)}")
+        return 1
 
 
 if __name__ == '__main__':
