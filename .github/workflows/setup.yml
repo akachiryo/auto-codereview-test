@@ -1,0 +1,32 @@
+name: 🚀 Team Setup
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      projects: write
+      
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        pip install requests pandas openpyxl
+        
+    - name: Run setup
+      env:
+        GITHUB_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        REPO: ${{ github.repository }}
+      run: |
+        python scripts/setup.py
