@@ -14,6 +14,7 @@ from typing import Dict, List
 TEAM_SETUP_TOKEN = os.environ.get('TEAM_SETUP_TOKEN')
 REPO = os.environ.get('REPO')
 REPO_OWNER, REPO_NAME = REPO.split('/') if REPO else (None, None)
+WIKI_PATH = os.environ.get('WIKI_PATH', 'wiki_content')
 
 # GitHub API設定
 API_BASE = 'https://api.github.com'
@@ -81,17 +82,53 @@ def create_wiki_pages():
 - [GitHub ベースリポジトリ](https://github.com/prum-jp/imakoko-base)
 """
     
-    # Wiki content をファイルとして保存（GitHub API経由では直接作成不可のため）
-    os.makedirs('wiki_content', exist_ok=True)
+    # Wikiディレクトリの存在確認と作成
+    os.makedirs(WIKI_PATH, exist_ok=True)
     
-    with open('wiki_content/table-design.md', 'w', encoding='utf-8') as f:
-        f.write(tables_content)
-    
-    with open('wiki_content/reference-links.md', 'w', encoding='utf-8') as f:
-        f.write(links_content)
-    
-    print("📝 Wiki content saved to wiki_content/ directory")
-    print("📌 Manual step required: Please create Wiki pages with the generated content")
+    try:
+        # Wiki repository に直接書き込み
+        table_design_path = os.path.join(WIKI_PATH, 'テーブル設計書.md')
+        reference_links_path = os.path.join(WIKI_PATH, '参考リンク.md')
+        home_path = os.path.join(WIKI_PATH, 'Home.md')
+        
+        with open(table_design_path, 'w', encoding='utf-8') as f:
+            f.write(tables_content)
+        
+        with open(reference_links_path, 'w', encoding='utf-8') as f:
+            f.write(links_content)
+            
+        # Home ページの作成
+        home_content = f"""# {REPO_NAME} Wiki
+
+## 📋 ドキュメント一覧
+
+- [[テーブル設計書]] - データベース設計の詳細
+- [[参考リンク]] - プロジェクト関連リンクまとめ
+
+## 🚀 自動生成
+
+このWikiページは GitHub Actions により自動生成されています。
+
+更新日時: {time.strftime('%Y-%m-%d %H:%M:%S')}
+"""
+        with open(home_path, 'w', encoding='utf-8') as f:
+            f.write(home_content)
+        
+        print("✅ Wiki pages generated successfully")
+        print(f"📂 Files created in: {WIKI_PATH}")
+        print("   • テーブル設計書.md")
+        print("   • 参考リンク.md")
+        print("   • Home.md")
+        
+    except Exception as e:
+        print(f"❌ Failed to create wiki pages: {str(e)}")
+        # フォールバック: ローカルディレクトリに保存
+        os.makedirs('wiki_content_backup', exist_ok=True)
+        with open('wiki_content_backup/table-design.md', 'w', encoding='utf-8') as f:
+            f.write(tables_content)
+        with open('wiki_content_backup/reference-links.md', 'w', encoding='utf-8') as f:
+            f.write(links_content)
+        print("📝 Wiki content saved to wiki_content_backup/ directory as fallback")
 
 
 def generate_table_design() -> str:
@@ -102,6 +139,7 @@ def generate_table_design() -> str:
         return "# テーブル設計書\n\nテーブル設計ファイルが見つかりません。"
     
     content = "# テーブル設計書\n\n"
+    content += "イマココSNSのデータベース設計書です。\n\n"
     
     try:
         with open(csv_path, 'r', encoding='utf-8') as f:
@@ -207,7 +245,7 @@ def create_project():
     variables = {
         'ownerId': repo_info['owner_id'],
         'repositoryId': repo_info['repository_id'],
-        'title': 'イマココSNS開発'
+        'title': 'イマココSNS'
     }
     
     result = graphql_request(query, variables)
@@ -229,8 +267,8 @@ def create_project():
 def setup_project_fields_and_views(project_id: str):
     """プロジェクトのフィールドとビューを設定"""
     
-    # ステータスフィールドを作成
-    create_status_field_query = """
+    # カスタムフィールド作成用のクエリ
+    create_custom_field_query = """
     mutation($projectId: ID!, $name: String!, $options: [ProjectV2SingleSelectFieldOptionInput!]!) {
         createProjectV2Field(input: {
             projectId: $projectId,
@@ -242,6 +280,10 @@ def setup_project_fields_and_views(project_id: str):
                 ... on ProjectV2SingleSelectField {
                     id
                     name
+                    options {
+                        id
+                        name
+                    }
                 }
             }
         }
@@ -257,19 +299,51 @@ def setup_project_fields_and_views(project_id: str):
         {"name": "Done", "color": "GREEN", "description": "完了 - 実装とテストが完了したタスク"}
     ]
     
-    variables = {
+    # テスト用ステータス
+    test_statuses = [
+        {"name": "Not Started", "color": "GRAY", "description": "未着手 - まだテストを開始していない"},
+        {"name": "In Progress", "color": "YELLOW", "description": "実行中 - テストを実行中"},
+        {"name": "Failed", "color": "RED", "description": "失敗 - テストが失敗している"},
+        {"name": "Passed", "color": "GREEN", "description": "成功 - テストが成功している"},
+        {"name": "Blocked", "color": "PURPLE", "description": "ブロック - 依存関係により実行できない"}
+    ]
+    
+    # タスク用フィールドを作成
+    task_variables = {
         'projectId': project_id,
-        'name': 'Status',
+        'name': 'TaskStatus',
         'options': task_statuses
     }
     
-    result = graphql_request(create_status_field_query, variables)
-    if result and 'createProjectV2Field' in result:
-        print("✅ Created Status field for tasks")
+    task_result = graphql_request(create_custom_field_query, task_variables)
+    if task_result and 'createProjectV2Field' in task_result:
+        print("✅ Created TaskStatus field")
+        field_info = task_result['createProjectV2Field']['projectV2Field']
+        print(f"   📋 Field ID: {field_info['id']}")
+        print("   📌 Task columns: Product Backlog → Sprint Backlog → In Progress → Review → Done")
     else:
-        print("⚠️ Status field creation may have issues, but project is functional")
+        print("⚠️ TaskStatus field creation had issues")
     
-    print("📋 Project fields configured successfully")
+    # 少し待機してからテスト用フィールドを作成（レート制限対策）
+    time.sleep(1)
+    
+    # テスト用フィールドを作成
+    test_variables = {
+        'projectId': project_id,
+        'name': 'TestStatus',
+        'options': test_statuses
+    }
+    
+    test_result = graphql_request(create_custom_field_query, test_variables)
+    if test_result and 'createProjectV2Field' in test_result:
+        print("✅ Created TestStatus field")
+        field_info = test_result['createProjectV2Field']['projectV2Field']
+        print(f"   📋 Field ID: {field_info['id']}")
+        print("   🧪 Test columns: Not Started → In Progress → Failed/Passed → Blocked")
+    else:
+        print("⚠️ TestStatus field creation had issues")
+    
+    print("📋 Project setup completed with Task and Test fields")
 
 
 def create_issues(project_id: str = None):
@@ -294,7 +368,9 @@ def create_issues(project_id: str = None):
     
     # プロジェクトにIssueを追加（Projects V2用）
     if project_id:
-        add_issues_to_project_v2(project_id, task_issues + test_issues)
+        print(f"\n📌 Adding issues to project...")
+        add_issues_to_project_v2(project_id, task_issues, 'task')
+        add_issues_to_project_v2(project_id, test_issues, 'test')
     
     print(f"✅ Created {len(task_issues)} task issues and {len(test_issues)} test issues")
 
@@ -314,13 +390,27 @@ def create_issues_from_csv(csv_path: str, issue_type: str) -> List[Dict]:
                     
                 title = row['title']
                 body = row['body']
-                labels = [label.strip() for label in row['labels'].split(',') if label.strip()]
+                
+                # 既存のラベルを処理
+                existing_labels = [label.strip() for label in row['labels'].split(',') if label.strip()]
+                
+                # issue_typeに基づいてラベルを追加
+                if issue_type == 'task':
+                    if 'task' not in existing_labels:
+                        existing_labels.append('task')
+                    if 'development' not in existing_labels:
+                        existing_labels.append('development')
+                elif issue_type == 'test':
+                    if 'test' not in existing_labels:
+                        existing_labels.append('test')
+                    if 'qa' not in existing_labels:
+                        existing_labels.append('qa')
                 
                 # Issue作成
                 issue_data = {
                     'title': title,
                     'body': body,
-                    'labels': labels
+                    'labels': existing_labels
                 }
                 
                 response = make_request(
@@ -332,7 +422,7 @@ def create_issues_from_csv(csv_path: str, issue_type: str) -> List[Dict]:
                 if response.status_code == 201:
                     issue = response.json()
                     created_issues.append(issue)
-                    print(f"  ✅ Created: {title[:50]}...")
+                    print(f"  ✅ Created: {title[:50]}... [Labels: {', '.join(existing_labels)}]")
                 else:
                     print(f"  ❌ Failed: {title[:50]}... - {response.text}")
                 
@@ -345,12 +435,13 @@ def create_issues_from_csv(csv_path: str, issue_type: str) -> List[Dict]:
     return created_issues
 
 
-def add_issues_to_project_v2(project_id: str, issues: List[Dict]):
+def add_issues_to_project_v2(project_id: str, issues: List[Dict], issue_type: str):
     """IssueをProjects V2に追加"""
     if not issues:
         return
     
-    print(f"  Adding {len(issues)} issues to project...")
+    type_emoji = "📝" if issue_type == 'task' else "🧪"
+    print(f"  {type_emoji} Adding {len(issues)} {issue_type} issues to project...")
     
     query = """
     mutation($projectId: ID!, $contentId: ID!) {
@@ -363,8 +454,8 @@ def add_issues_to_project_v2(project_id: str, issues: List[Dict]):
     """
     
     for i, issue in enumerate(issues):
-        if i >= 10:  # 制限対策
-            print(f"  ⚠️ Limiting to first 10 issues for project addition")
+        if i >= 20:  # 少し制限を緩和
+            print(f"    ⚠️ Limiting to first 20 {issue_type} issues for project addition")
             break
             
         variables = {
@@ -374,9 +465,9 @@ def add_issues_to_project_v2(project_id: str, issues: List[Dict]):
         
         result = graphql_request(query, variables)
         if result and 'addProjectV2ItemById' in result:
-            print(f"    ✅ Added to project: {issue['title'][:40]}...")
+            print(f"    ✅ Added {issue_type}: {issue['title'][:40]}...")
         else:
-            print(f"    ❌ Failed to add: {issue['title'][:40]}...")
+            print(f"    ❌ Failed to add {issue_type}: {issue['title'][:40]}...")
         
         time.sleep(0.5)
 
@@ -401,16 +492,31 @@ def main():
         create_issues(project_id)
         
         print("\n✨ Setup completed!")
-        print(f"📌 Next steps:")
-        print(f"  1. Go to https://github.com/{REPO}/wiki to create Wiki pages")
-        print(f"  2. Copy content from wiki_content/ directory")
-        print(f"  3. Check Projects at https://github.com/{REPO}/projects")
-        print(f"  4. 🔧 Manual setup required: Set board as default view")
-        print(f"     - Open your project URL")
-        print(f"     - Click the view dropdown (currently 'Table')")
-        print(f"     - Select 'Board' view")
-        print(f"     - Click the '⋯' menu and select 'Set as default view'")
-        print(f"  5. Review Issues at https://github.com/{REPO}/issues")
+        print(f"📌 What was created:")
+        print(f"  📚 Wiki pages automatically generated and pushed")
+        print(f"  📊 GitHub Project 'イマココSNS' created")
+        print(f"  📝 Task Issues created with TaskStatus field")
+        print(f"  🧪 Test Issues created with TestStatus field")
+        print(f"")
+        print(f"📋 Access your resources:")
+        print(f"  • Wiki: https://github.com/{REPO}/wiki")
+        print(f"  • Projects: https://github.com/{REPO}/projects")
+        print(f"  • Issues: https://github.com/{REPO}/issues")
+        print(f"")
+        print(f"🔧 Manual setup required: Create 2 views in your project")
+        print(f"  【タスクビュー作成】")
+        print(f"  1. Open your project → New view → Board")
+        print(f"  2. Name: 'タスク'")
+        print(f"  3. Group by: 'TaskStatus'")
+        print(f"  4. Filter: label:task")
+        print(f"")
+        print(f"  【テストビュー作成】")
+        print(f"  1. Open your project → New view → Board")
+        print(f"  2. Name: 'テスト'")
+        print(f"  3. Group by: 'TestStatus'")
+        print(f"  4. Filter: label:test")
+        print(f"")
+        print(f"💡 Each view will show only relevant issues with proper status columns!")
         
         return 0
         
