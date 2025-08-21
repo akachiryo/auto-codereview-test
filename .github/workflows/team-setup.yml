@@ -89,7 +89,7 @@ jobs:
         echo "📚 Step 3: Setting up Wiki (v3.1 - syntax fix)..."
         
         # Generate wiki content
-        python scripts/setup_wiki_v3.py
+        python scripts/setup_wiki.py
         
         # Initialize wiki repository if needed
         if [ -d "wiki" ]; then
