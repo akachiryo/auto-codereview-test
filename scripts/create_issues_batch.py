@@ -228,6 +228,11 @@ def main():
     """メイン処理"""
     print(f"🎯 Creating Issues - Batch {BATCH_NUMBER} (Size: {BATCH_SIZE})")
     print(f"📦 Repository: {GITHUB_REPOSITORY}")
+    print(f"📊 Batch Configuration:")
+    print(f"  • Batch Number: {BATCH_NUMBER}")
+    print(f"  • Batch Size: {BATCH_SIZE}")
+    print(f"  • Start Index: {(BATCH_NUMBER - 1) * BATCH_SIZE}")
+    print(f"  • End Index: {BATCH_NUMBER * BATCH_SIZE}")
     
     # プロジェクトIDを読み込み
     project_ids = load_project_ids()

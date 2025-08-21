@@ -1,0 +1,35 @@
+# このファイルは廃止されました
+# 新しいバッチ処理システムを使用してください
+# 
+# 実行方法:
+# 1. team-setup-main.yml を実行
+# 2. Issue作成バッチが自動で順次実行されます
+#
+# 詳細はREADME.mdを参照してください
+
+name: ⚠️ DEPRECATED - Use team-setup-main.yml
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deprecated:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deprecated Notice
+      run: |
+        echo "⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️"
+        echo "⚠️                                              ⚠️"
+        echo "⚠️  このワークフローは廃止されました            ⚠️"
+        echo "⚠️  team-setup-main.yml を使用してください      ⚠️"
+        echo "⚠️                                              ⚠️"
+        echo "⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️"
+        echo ""
+        echo "新しいワークフローの使い方:"
+        echo "1. Actions タブを開く"
+        echo "2. 'Team Setup - Main' を選択"
+        echo "3. 'Run workflow' をクリック"
+        echo ""
+        echo "または直接アクセス:"
+        echo "https://github.com/${{ github.repository }}/actions/workflows/team-setup-main.yml"
+        exit 1

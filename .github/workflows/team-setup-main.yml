@@ -181,9 +181,15 @@ jobs:
       with:
         github-token: ${{ secrets.TEAM_SETUP_TOKEN }}
         script: |
-          await github.rest.actions.createWorkflowDispatch({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            workflow_id: 'team-setup-issues-1.yml'
-          });
-          console.log('✅ Triggered Issue Creation Batch 1');
+          try {
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'team-setup-issues-1.yml',
+              ref: 'main'
+            });
+            console.log('✅ Triggered Issue Creation Batch 1');
+          } catch (error) {
+            console.log('⚠️ Failed to trigger batch 1:', error.message);
+            console.log('💡 Please manually run team-setup-issues-1.yml');
+          }

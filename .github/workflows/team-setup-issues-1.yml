@@ -60,12 +60,15 @@ jobs:
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              workflow_id: 'team-setup-issues-2.yml'
+              workflow_id: 'team-setup-issues-2.yml',
+              ref: context.ref || 'main'
             });
             console.log('✅ Triggered Issue Creation Batch 2');
+            console.log('📊 Batch 2 will create issues 51-100');
           } catch (error) {
             console.log('⚠️ Could not trigger Batch 2:', error.message);
             console.log('💡 Please manually run team-setup-issues-2.yml');
+            console.log('🔗 Direct link: https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions/workflows/team-setup-issues-2.yml');
           }
         
     - name: Display batch results
