@@ -226,13 +226,20 @@ def add_issues_to_project(project_id: str, issues: List[Dict], project_name: str
 
 def main():
     """メイン処理"""
-    print(f"🎯 Creating Issues - Batch {BATCH_NUMBER} (Size: {BATCH_SIZE})")
+    print("=" * 60)
+    print(f"🎯 BATCH ISSUE CREATION SYSTEM v3.0 (CONSOLIDATED)")
+    print("=" * 60)
     print(f"📦 Repository: {GITHUB_REPOSITORY}")
+    print(f"⏰ Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"🔧 Script: create_issues_batch.py v3.0")
     print(f"📊 Batch Configuration:")
     print(f"  • Batch Number: {BATCH_NUMBER}")
     print(f"  • Batch Size: {BATCH_SIZE}")
     print(f"  • Start Index: {(BATCH_NUMBER - 1) * BATCH_SIZE}")
     print(f"  • End Index: {BATCH_NUMBER * BATCH_SIZE}")
+    print(f"  • NO LIMITS - Will process all items in batch range")
+    print(f"  • CRITICAL: No 50-issue or 30-issue limits in this version")
+    print("=" * 60)
     
     # プロジェクトIDを読み込み
     project_ids = load_project_ids()

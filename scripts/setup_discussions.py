@@ -209,8 +209,13 @@ def create_discussion(repository_id: str, category_id: str, title: str, body: st
 
 def main():
     """メイン処理"""
-    print("💬 Setting up GitHub Discussions...")
+    print("=" * 60)
+    print("💬 DISCUSSIONS SETUP v3.0 (CONSOLIDATED)")
+    print("=" * 60)
     print(f"📦 Repository: {GITHUB_REPOSITORY}")
+    print(f"⏰ Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"🔧 Script: setup_discussions.py v3.0")
+    print("=" * 60)
     
     # リポジトリ情報取得
     repo_info = get_repository_info()

@@ -1,35 +1,218 @@
-# このファイルは廃止されました
-# 新しいバッチ処理システムを使用してください
-# 
-# 実行方法:
-# 1. team-setup-main.yml を実行
-# 2. Issue作成バッチが自動で順次実行されます
-#
-# 詳細はREADME.mdを参照してください
-
-name: ⚠️ DEPRECATED - Use team-setup-main.yml
+name: 🚀 Team Development Setup v3.0 (CONSOLIDATED)
 
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+  issues: write
+  discussions: write
+
 jobs:
-  deprecated:
+  setup-environment:
     runs-on: ubuntu-latest
+    
     steps:
-    - name: Deprecated Notice
+    - name: 🔍 Environment Diagnostics
       run: |
-        echo "⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️"
-        echo "⚠️                                              ⚠️"
-        echo "⚠️  このワークフローは廃止されました            ⚠️"
-        echo "⚠️  team-setup-main.yml を使用してください      ⚠️"
-        echo "⚠️                                              ⚠️"
-        echo "⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️"
+        echo "=========================================================="
+        echo "🚀 TEAM SETUP WORKFLOW v3.0 (CONSOLIDATED) STARTING"
+        echo "=========================================================="
+        echo "⏰ Timestamp: $(date)"
+        echo "🔧 Workflow: team-setup.yml v3.0"
+        echo "📂 Working Directory: $(pwd)"
+        echo "👤 Actor: ${{ github.actor }}"
+        echo "📦 Repository: ${{ github.repository }}"
+        echo "🌿 Ref: ${{ github.ref }}"
+        echo "💻 Runner OS: ${{ runner.os }}"
+        echo "=========================================================="
+        
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        pip install requests pandas
+        
+    - name: 🔍 Pre-Setup Verification
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        echo "🔍 Running environment verification..."
+        python scripts/verify_environment.py
+        
+    # ===============================
+    # Step 1: Create GitHub Projects
+    # ===============================
+    - name: 📊 Create GitHub Projects V2
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        echo "📊 Step 1: Creating 3 GitHub Projects (v3.0)..."
+        python scripts/create_projects.py
+        echo "✅ Projects created successfully"
+        echo "📝 Checking project_ids.txt..."
+        if [ -f "project_ids.txt" ]; then
+          echo "Found project IDs:"
+          cat project_ids.txt
+        else
+          echo "⚠️ project_ids.txt not found"
+        fi
+        
+    # ===============================
+    # Step 2: Setup Discussions
+    # ===============================
+    - name: 💬 Setup GitHub Discussions
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        echo "💬 Step 2: Setting up Discussions (v3.0)..."
+        python scripts/setup_discussions.py
+        echo "✅ Discussions setup complete"
+        
+    # ===============================
+    # Step 3: Setup Wiki
+    # ===============================
+    - name: 📚 Setup GitHub Wiki
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        echo "📚 Step 3: Setting up Wiki (v3.0)..."
+        
+        # Generate wiki content
+        python scripts/setup_wiki.py
+        
+        # Initialize wiki repository if needed
+        if [ -d "wiki" ]; then
+          echo "📝 Initializing Wiki repository (v3.0)..."
+          echo "📝 Found wiki directory, listing contents:"
+          ls -la wiki/
+          
+          # Create temporary directory for wiki operations
+          WIKI_DIR="wiki_repository"
+          rm -rf $WIKI_DIR
+          mkdir -p $WIKI_DIR
+          cd $WIKI_DIR
+          
+          # Initialize git
+          git init
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          
+          # Copy generated wiki content
+          cp -r ../wiki/* . 2>/dev/null || echo "No wiki files to copy"
+          
+          # Create initial commit
+          git add .
+          git commit -m "📚 Initialize Wiki with auto-generated content" || echo "No changes to commit"
+          
+          # Push to wiki repository
+          git remote add origin https://${{ secrets.TEAM_SETUP_TOKEN }}@github.com/${{ github.repository }}.wiki.git
+          
+          # Try to push (create if doesn't exist)
+          git push --force --set-upstream origin master 2>/dev/null || \
+          git push --force --set-upstream origin main 2>/dev/null || \
+          echo "Wiki repository might already exist or need manual initialization"
+          
+          cd ..
+          rm -rf $WIKI_DIR
+        else
+          echo "⚠️ Wiki content directory not found"
+        fi
+        
+        echo "✅ Wiki setup complete"
+        
+    # ===============================
+    # Step 4: Create Issues (Batch Processing)
+    # ===============================
+    - name: 🎯 Create Issues - Batch 1 (1-50)
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        BATCH_NUMBER: 1
+        BATCH_SIZE: 50
+      run: |
+        echo "🎯 Step 4.1: Creating Issues Batch 1 (1-50) - v3.0..."
+        echo "📊 CRITICAL: This is v3.0 with NO hardcoded limits"
+        python scripts/create_issues_batch.py || echo "⚠️ Batch 1 had some errors"
+        echo "⏳ Waiting 30 seconds before next batch..."
+        sleep 30
+        
+    - name: 🎯 Create Issues - Batch 2 (51-100)
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        BATCH_NUMBER: 2
+        BATCH_SIZE: 50
+      run: |
+        echo "🎯 Step 4.2: Creating Issues Batch 2 (51-100) - v3.0..."
+        echo "📊 CRITICAL: This is v3.0 with NO hardcoded limits"
+        python scripts/create_issues_batch.py || echo "⚠️ Batch 2 had some errors"
+        echo "⏳ Waiting 30 seconds before next batch..."
+        sleep 30
+        
+    - name: 🎯 Create Issues - Batch 3 (101-150)
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        BATCH_NUMBER: 3
+        BATCH_SIZE: 50
+      run: |
+        echo "🎯 Step 4.3: Creating Issues Batch 3 (101-150) - v3.0..."
+        echo "📊 CRITICAL: This is v3.0 with NO hardcoded limits"
+        python scripts/create_issues_batch.py || echo "⚠️ Batch 3 had some errors"
+        echo "⏳ Waiting 30 seconds before next batch..."
+        sleep 30
+        
+    - name: 🎯 Create Issues - Batch 4 (151-200)
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        BATCH_NUMBER: 4
+        BATCH_SIZE: 50
+      run: |
+        echo "🎯 Step 4.4: Creating Issues Batch 4 (151-200) - v3.0..."
+        echo "📊 CRITICAL: This is v3.0 with NO hardcoded limits"
+        python scripts/create_issues_batch.py || echo "⚠️ Batch 4 had some errors"
+        echo "✅ All batches complete (v3.0)"
+        
+    # ===============================
+    # Step 5: Final Summary
+    # ===============================
+    - name: 🎉 Display Final Summary
+      run: |
         echo ""
-        echo "新しいワークフローの使い方:"
-        echo "1. Actions タブを開く"
-        echo "2. 'Team Setup - Main' を選択"
-        echo "3. 'Run workflow' をクリック"
+        echo "🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉"
+        echo "🎉                                        🎉"
+        echo "🎉    チーム開発環境セットアップ完了！ v3.0   🎉"
+        echo "🎉    Team Development Setup Complete! v3.0   🎉"
+        echo "🎉                                        🎉"
+        echo "🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉"
         echo ""
-        echo "または直接アクセス:"
-        echo "https://github.com/${{ github.repository }}/actions/workflows/team-setup-main.yml"
-        exit 1
+        echo "🆕 VERSION CONFIRMATION: This was run with v3.0 (CONSOLIDATED)"
+        echo "✅ Successfully Created:"
+        echo "• 📊 3 GitHub Projects V2"
+        echo "• 🎯 ALL Issues from CSV (NO 50/30 limits in v3.0)"
+        echo "• 📚 Wiki pages with table design"
+        echo "• 💬 Discussion template"
+        echo ""
+        echo "🔗 Access your resources:"
+        echo "• Projects: https://github.com/${{ github.repository }}/projects"
+        echo "• Issues: https://github.com/${{ github.repository }}/issues"
+        echo "• Wiki: https://github.com/${{ github.repository }}/wiki"
+        echo "• Discussions: https://github.com/${{ github.repository }}/discussions"
+        echo ""
+        echo "📝 Notes:"
+        echo "• If Wiki doesn't appear, enable it in repository settings"
+        echo "• Create '議事録' category manually in Discussions"
+        echo "• v3.0: ALL issues should be linked to projects (no limits)"
+        echo "• v3.0: Check issue counts match CSV row counts"

@@ -241,8 +241,13 @@ def verify_wiki_content():
 
 def main():
     """メイン処理"""
-    print("📚 Setting up GitHub Wiki...")
+    print("=" * 60)
+    print("📚 WIKI SETUP v3.0 (CONSOLIDATED)")
+    print("=" * 60)
     print(f"📦 Repository: {GITHUB_REPOSITORY}")
+    print(f"⏰ Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"🔧 Script: setup_wiki.py v3.0")
+    print("=" * 60)
     
     try:
         # Wikiコンテンツの生成

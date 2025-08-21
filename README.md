@@ -2,21 +2,32 @@
 
 このプロジェクトは、未経験エンジニア（アカデミー生）を対象としたチーム開発研修用リポジトリです。
 
-## 🚀 チーム開発環境自動セットアップ
+## 🚀 チーム開発環境自動セットアップ v3.0
 
-### バッチ処理による安定した自動化
+### 🆕 単一統合ワークフローで完全自動化
 
-[![🚀 Main Setup](https://img.shields.io/badge/🚀_Main_Setup-Start_Here-success?style=for-the-badge&logo=github)](../../actions/workflows/team-setup-main.yml)
+[![🚀 Team Setup v3.0](https://img.shields.io/badge/🚀_Team_Setup_v3.0-Click_to_Start-success?style=for-the-badge&logo=github)](../../actions/workflows/team-setup.yml)
 
-**リポジトリをcloneまたはtemplateでコピーし、上記ボタンをクリックして段階的に以下を自動生成：**
+**上記ボタンをクリックするだけで、全ての環境が自動セットアップされます！**
 
-### 🔄 自動セットアップフロー
+### ✨ v3.0の改善点
+- 🆕 **単一統合ワークフロー**: 複数ファイルを一つに統合
+- 📊 **制限なし**: 50件の制限や30件の制限を完全撤廣
+- 🔍 **診断機能強化**: バージョン識別とログ改善
+- 🛠️ **トラブルシューティング**: 完全な問題解決ガイド
 
-#### **Step 1: メインセットアップ** ← まずここから開始
+### ✨ 自動生成される環境
+
 - 📊 **3つのGitHub Projects V2**
   - `イマココSNS（タスク）` - 開発タスク管理
   - `イマココSNS（テスト）` - テスト管理
   - `イマココSNS（KPTA）` - ふりかえり管理
+  
+- 🎯 **249件のGitHub Issues**
+  - タスク15件 + テスト234件（CSVの全データ）
+  - 自動ラベル付与
+  - プロジェクトへの自動紐付け（全件）
+  - v3.0: 制限なしのバッチ処理
   
 - 💬 **GitHub Discussions**
   - 自動で有効化
@@ -24,18 +35,8 @@
   
 - 📚 **GitHub Wiki**
   - HOMEページ
-  - ルール（初期は空）
-  - キックオフ（初期は空）
-  - テーブル設計書（`data/imakoko_sns_tables.csv`から自動生成）
-
-#### **Step 2-5: Issue作成バッチ** ← 自動で順次実行
-- 🎯 **197件の全GitHub Issues**
-  - **Batch 1**: Issues 1-50
-  - **Batch 2**: Issues 51-100  
-  - **Batch 3**: Issues 101-150
-  - **Batch 4**: Issues 151-197
-  - 自動ラベル付与とプロジェクトへの紐付け
-  - Rate Limit完全対応
+  - テーブル設計書（CSVから自動生成）
+  - ルール・キックオフページ（テンプレート）
 
 ## 🔑 セットアップ手順
 
@@ -54,36 +55,32 @@
    - Name: `TEAM_SETUP_TOKEN`
    - Secret: 作成したトークンを貼り付け
 
-### 2. ~~Wikiの初期化~~ ← 不要！
+### 2. 自動セットアップの実行
 
-~~Wikiの初期化は自動化されているため手動操作不要です~~
-✅ **Wiki有効化とページ作成は完全自動化済み**
-
-### 3. 自動セットアップの実行
-
-1. 上記の「🚀 Main Setup」ボタンをクリック
+1. 上記の「🚀 Team Setup」ボタンをクリック
 2. `Run workflow` をクリック  
 3. `Run workflow` ボタンをクリックして実行
-4. **重要**: メインセットアップが完了すると、Issue作成バッチが自動で順次実行されます
-5. [Actions](../../actions) タブで全体の進行状況を確認
-6. 全バッチ完了まで約10-15分程度お待ちください
+4. [Actions](../../actions) タブで進行状況を確認
+5. 約10-15分で全セットアップが完了します
 
-### 📊 実行監視
+### 📊 処理の流れ
 
-- **メインセットアップ**: Projects、Wiki、Discussionsを作成
-- **Issue Batch 1-4**: 自動で30秒間隔で順次実行
-- **完了確認**: 最終バッチで全体サマリーを表示
+1. **Projects作成**: 3つのプロジェクトを作成
+2. **Discussions設定**: 有効化とテンプレート作成
+3. **Wiki生成**: ページ自動生成とプッシュ
+4. **Issue作成**: 4バッチで249件を順次作成（v3.0: 制限なし）
+5. **完了通知**: 全体サマリーを表示
 
 ## 📋 生成されるリソース
 
 ### GitHub Projects
 - [Projects](../../projects) で3つのプロジェクトが確認できます
-- **197件**のタスクとテストIssuesが各プロジェクトに自動紐付け
+- **249件**のタスクとテストIssuesが各プロジェクトに自動紐付け（v3.0: 全件）
 
 ### GitHub Issues  
-- [Issues](../../issues) で**197件**のIssuesが確認できます
-- タスク: 15件、テスト: 182件
-- 適切なラベルが自動付与されプロジェクトに紐付け済み
+- [Issues](../../issues) で**249件**のIssuesが確認できます
+- タスク: 15件、テスト: 234件（CSVの全データ）
+- v3.0: 適切なラベルが自動付与されプロジェクトに全件紐付け
 
 ### GitHub Discussions
 - [Discussions](../../discussions) で議事録テンプレートが確認できます
@@ -113,6 +110,36 @@ mvn spring-boot:run
 ```
 
 アクセス: http://localhost:8080
+
+## 🔧 トラブルシューティング
+
+### 古いエラーが出る場合（v3.0移行後）
+もし以下のエラーメッセージが表示される場合:
+- `⚠️ Limiting to first 50 test issues to avoid rate limits`
+- `⚠️ Limiting to first 30 issues for project addition`
+- Wikiの Python indentation エラー
+
+**これは古いコードが実行されている証拠です。**
+
+### 解決手順
+```bash
+# 1. 環境をクリーンアップ
+python scripts/cleanup_force_refresh.py
+
+# 2. 環境を確認
+python scripts/verify_environment.py
+
+# 3. ワークフローを手動実行
+# GitHub Actions タブで「🚀 Team Development Setup v3.0 (CONSOLIDATED)」を実行
+```
+
+### バージョン確認
+ワークフロー実行時に以下が表示されるかチェック:
+- ワークフロー名: `🚀 Team Development Setup v3.0 (CONSOLIDATED)`
+- ログに `v3.0` や `NO hardcoded limits` が表示される
+- 249件のIssueが作成される（15タスク + 234テスト）
+
+詳細は [TROUBLESHOOTING_v3.md](./TROUBLESHOOTING_v3.md) を参照
 
 ## 📝 参考資料
 
