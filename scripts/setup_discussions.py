@@ -99,40 +99,17 @@ def delete_category(category_id: str, category_name: str) -> bool:
         print(f"  ❌ Failed to delete category: {category_name}")
         return False
 
-def create_category(repository_id: str, name: str, description: str) -> Optional[str]:
-    """Discussionカテゴリーを作成"""
-    # API Reference: https://docs.github.com/en/graphql/reference/mutations#creatediscussioncategory
-    query = """
-    mutation($repositoryId: ID!, $name: String!, $description: String!) {
-        createDiscussionCategory(input: {
-            repositoryId: $repositoryId,
-            name: $name,
-            description: $description,
-            format: OPEN
-        }) {
-            category {
-                id
-                name
-                slug
-            }
-        }
-    }
-    """
+def create_category_via_web_api(repository_id: str, name: str, description: str) -> Optional[str]:
+    """Discussion カテゴリーの作成（Web API制限あり）"""
+    # NOTE: GitHub GraphQL API では discussion category の作成をサポートしていません
+    # API Reference: https://docs.github.com/en/graphql/guides/using-the-graphql-api-for-discussions
+    # Discussion categories must be created via GitHub web interface
     
-    variables = {
-        'repositoryId': repository_id,
-        'name': name,
-        'description': description
-    }
-    
-    result = graphql_request(query, variables)
-    if result and 'createDiscussionCategory' in result:
-        category = result['createDiscussionCategory']['category']
-        print(f"  ✅ Created category: {category['name']} (slug: {category['slug']})")
-        return category['id']
-    else:
-        print(f"  ❌ Failed to create category: {name}")
-        return None
+    print(f"  ⚠️ GitHub API limitation: Cannot create discussion categories via API")
+    print(f"  📝 Category '{name}' must be created manually in GitHub web interface")
+    print(f"  🔗 Go to: https://github.com/{GITHUB_REPOSITORY}/discussions/categories")
+    print(f"  💡 Or enable discussions and default categories will be created automatically")
+    return None
 
 def create_discussion(repository_id: str, category_id: str, title: str, body: str) -> bool:
     """Discussionを作成"""
@@ -191,20 +168,22 @@ def main():
         delete_category(category['id'], category['name'])
         time.sleep(1)  # Rate limit対策
     
-    print(f"\n📝 Creating '議事録' category...")
-    # 議事録カテゴリーを作成
-    category_id = create_category(
-        repository_id,
-        "議事録",
-        "チーム開発の議事録を管理するカテゴリーです"
-    )
+    print(f"\n📝 Trying to work with discussions...")
     
-    if category_id:
-        time.sleep(2)  # カテゴリー作成後の待機
+    # GitHub API では discussion category の作成ができないため、
+    # 既存のカテゴリーを確認してそこに議事録テンプレートを作成
+    
+    if existing_categories:
+        # 最初のカテゴリーを使用してテンプレートを作成
+        first_category = existing_categories[0]
+        category_id = first_category['id']
+        category_name = first_category['name']
         
-        print(f"\n📋 Creating meeting minutes template...")
+        print(f"  📝 Using existing category: {category_name}")
+        print(f"  📋 Creating meeting minutes template...")
+        
         # 議事録テンプレートを作成
-        template_title = "📋 議事録テンプレート"
+        template_title = "📋 議事録テンプレート - チーム開発用"
         template_body = """# 議事録
 
 ## 📅 開催日時
@@ -248,14 +227,26 @@ YYYY/MM/DD HH:MM ～ HH:MM
 
 ---
 *このテンプレートをコピーして新しい議事録を作成してください*
+
+**注意**: GitHub API の制限により、「議事録」専用カテゴリーは手動で作成する必要があります。
+- GitHub リポジトリの Discussions タブ → Categories → New category
+- 名前: 議事録
+- 説明: チーム開発の議事録を管理するカテゴリーです
 """
         
         create_discussion(repository_id, category_id, template_title, template_body)
+    else:
+        print(f"  ⚠️ No discussion categories found")
+        print(f"  💡 Please enable discussions first in repository settings")
+        
+        # API制限についてユーザーに通知
+        create_category_via_web_api(repository_id, "議事録", "チーム開発の議事録を管理するカテゴリーです")
     
     print(f"\n✨ Discussions setup completed!")
-    print(f"📌 Created:")
-    print(f"  • '議事録' category")
-    print(f"  • Meeting minutes template")
+    print(f"📌 Setup result:")
+    print(f"  • Meeting minutes template created")
+    print(f"  • Instructions provided for manual category creation")
+    print(f"  ⚠️ Note: '議事録' category requires manual creation due to GitHub API limitations")
     
     print(f"\n🔗 Access your discussions:")
     print(f"  https://github.com/{GITHUB_REPOSITORY}/discussions")

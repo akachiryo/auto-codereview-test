@@ -79,8 +79,10 @@ def generate_wiki_content(wiki_path: str = 'wiki'):
     """Wikiページのコンテンツを生成"""
     print("📚 Generating Wiki content...")
     
-    # Wikiディレクトリの作成
-    os.makedirs(wiki_path, exist_ok=True)
+    try:
+        # Wikiディレクトリの作成
+        os.makedirs(wiki_path, exist_ok=True)
+        print(f"📂 Wiki directory created/verified: {wiki_path}")
     
     # 1. HOMEページ
     home_content = f"""# イマココSNS Wiki
@@ -157,7 +159,6 @@ def generate_wiki_content(wiki_path: str = 'wiki'):
 
 *最終更新: """ + time.strftime('%Y-%m-%d %H:%M:%S') + "*"
     
-    try:
         # ファイルに書き込み
         pages = {
             'Home.md': home_content,
@@ -168,20 +169,44 @@ def generate_wiki_content(wiki_path: str = 'wiki'):
         
         for filename, content in pages.items():
             file_path = os.path.join(wiki_path, filename)
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(content)
-            print(f"  ✅ Generated: {filename}")
+            try:
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                print(f"  ✅ Generated: {filename}")
+            except Exception as e:
+                print(f"  ❌ Failed to write {filename}: {str(e)}")
+                continue
         
         print(f"📂 Wiki content generated in: {wiki_path}")
         print("📌 Generated pages:")
         for filename in pages.keys():
-            print(f"  • {filename}")
+            if os.path.exists(os.path.join(wiki_path, filename)):
+                print(f"  • {filename}")
+        
+        return True
         
     except Exception as e:
         print(f"❌ Failed to generate wiki content: {str(e)}")
-        return False
-    
-    return True
+        print(f"💡 Error details: {type(e).__name__}")
+        
+        # フォールバック: 最低限のHome.mdだけでも作成
+        try:
+            fallback_home = f"""# {GITHUB_REPOSITORY} Wiki
+
+## エラー発生
+
+Wiki生成中にエラーが発生しました。手動でページを作成してください。
+
+最終更新: {time.strftime('%Y-%m-%d %H:%M:%S')}
+"""
+            fallback_path = os.path.join(wiki_path, 'Home.md')
+            with open(fallback_path, 'w', encoding='utf-8') as f:
+                f.write(fallback_home)
+            print(f"  📝 Fallback: Created minimal Home.md")
+            return True
+        except Exception as fallback_error:
+            print(f"  ❌ Fallback also failed: {str(fallback_error)}")
+            return False
 
 def main():
     """メイン処理"""

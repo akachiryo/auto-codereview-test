@@ -90,9 +90,10 @@ def create_issues_from_csv(csv_path: str, issue_type: str, labels: List[str]) ->
             reader = csv.DictReader(f)
             
             for i, row in enumerate(reader, 1):
-                if i > 50:  # 制限を少し緩和
-                    print(f"⚠️ Limiting to first 50 {issue_type} issues to avoid rate limits")
-                    break
+                # 全件作成（Rate limit対策として適切な間隔で処理）
+                if i % 25 == 0:  # 25件ごとに少し長めの待機
+                    print(f"  ⏳ Processed {i} {issue_type} issues, pausing for rate limit...")
+                    time.sleep(10)
                 
                 title = row.get('title', '')
                 body = row.get('body', '')
@@ -121,8 +122,8 @@ def create_issues_from_csv(csv_path: str, issue_type: str, labels: List[str]) ->
                 else:
                     print(f"  ❌ Failed: {title[:50]}... - {response.text}")
                 
-                # Rate limit対策
-                time.sleep(1)
+                # Rate limit対策（通常の間隔）
+                time.sleep(2)
                 
     except Exception as e:
         print(f"❌ Error reading CSV {csv_path}: {str(e)}")
@@ -149,9 +150,10 @@ def add_issues_to_project(project_id: str, issues: List[Dict], project_name: str
     
     success_count = 0
     for i, issue in enumerate(issues):
-        if i >= 30:  # プロジェクトへの追加は30件まで
-            print(f"    ⚠️ Limiting to first 30 issues for project addition")
-            break
+        # 全件をプロジェクトに追加（Rate limit対策）
+        if i % 20 == 0 and i > 0:  # 20件ごとに休憩
+            print(f"    ⏳ Added {i} issues so far, pausing for rate limit...")
+            time.sleep(5)
             
         variables = {
             'projectId': project_id,
@@ -165,9 +167,9 @@ def add_issues_to_project(project_id: str, issues: List[Dict], project_name: str
         else:
             print(f"    ❌ Failed to add: {issue['title'][:40]}...")
         
-        time.sleep(0.5)
+        time.sleep(1)  # 各Issue追加間の間隔を調整
     
-    print(f"📊 Successfully added {success_count}/{len(issues[:30])} issues to {project_name}")
+    print(f"📊 Successfully added {success_count}/{len(issues)} issues to {project_name}")
 
 def main():
     """メイン処理"""

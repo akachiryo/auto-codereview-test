@@ -78,12 +78,7 @@ jobs:
           
           # Generate new Wiki content
           cd ..
-          python -c "
-          import sys
-          sys.path.append('scripts')
-          from setup_wiki import generate_wiki_content
-          generate_wiki_content('./wiki')
-          "
+          python -c "import sys; sys.path.append('scripts'); from setup_wiki import generate_wiki_content; generate_wiki_content('./wiki')"
           
           cd wiki
           git add .
