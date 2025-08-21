@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GitHub Wiki設定スクリプト v3.1 (構文エラー修正版)
+GitHub Wiki設定スクリプト
 Wikiページを生成する（git操作はGitHub Actionsで実行）
 """
 
@@ -113,12 +113,12 @@ def generate_wiki_content(wiki_path: str = 'wiki'):
 *このWikiは GitHub Actions により自動生成されています*  
 *最終更新: {time.strftime('%Y-%m-%d %H:%M:%S')}*
 """
-        
-        # 2. テーブル設計書
-        table_design_content = generate_table_design()
-        
-        # 3. ルールページ（空）
-        rules_content = f"""# ルール
+    
+    # 2. テーブル設計書
+    table_design_content = generate_table_design()
+    
+    # 3. ルールページ（空）
+    rules_content = """# ルール
 
 チーム開発のルールとガイドラインをここに記載します。
 
@@ -136,11 +136,10 @@ def generate_wiki_content(wiki_path: str = 'wiki'):
 
 ---
 
-*最終更新: {time.strftime('%Y-%m-%d %H:%M:%S')}*
-"""
-        
-        # 4. キックオフページ（空）
-        kickoff_content = f"""# キックオフ
+*最終更新: """ + time.strftime('%Y-%m-%d %H:%M:%S') + "*"
+    
+    # 4. キックオフページ（空）
+    kickoff_content = """# キックオフ
 
 プロジェクトキックオフの資料をここに記載します。
 
@@ -158,9 +157,8 @@ def generate_wiki_content(wiki_path: str = 'wiki'):
 
 ---
 
-*最終更新: {time.strftime('%Y-%m-%d %H:%M:%S')}*
-"""
-        
+*最終更新: """ + time.strftime('%Y-%m-%d %H:%M:%S') + "*"
+    
         # ファイルに書き込み
         pages = {
             'Home.md': home_content,
@@ -244,11 +242,11 @@ def verify_wiki_content():
 def main():
     """メイン処理"""
     print("=" * 60)
-    print("📚 WIKI SETUP v3.1 (SYNTAX ERROR FIXED)")
+    print("📚 WIKI SETUP v3.0 (CONSOLIDATED)")
     print("=" * 60)
     print(f"📦 Repository: {GITHUB_REPOSITORY}")
     print(f"⏰ Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"🔧 Script: setup_wiki_v3.py v3.1")
+    print(f"🔧 Script: setup_wiki.py v3.0")
     print("=" * 60)
     
     try:

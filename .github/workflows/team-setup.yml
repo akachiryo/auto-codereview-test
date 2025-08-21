@@ -86,10 +86,10 @@ jobs:
         TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
         GITHUB_REPOSITORY: ${{ github.repository }}
       run: |
-        echo "📚 Step 3: Setting up Wiki (v3.0)..."
+        echo "📚 Step 3: Setting up Wiki (v3.1 - syntax fix)..."
         
         # Generate wiki content
-        python scripts/setup_wiki.py
+        python scripts/setup_wiki_v3.py
         
         # Initialize wiki repository if needed
         if [ -d "wiki" ]; then
