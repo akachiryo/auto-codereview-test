@@ -20,10 +20,12 @@ TEAM_SETUP_TOKEN = os.environ.get('TEAM_SETUP_TOKEN')
 GITHUB_REPOSITORY = os.environ.get('GITHUB_REPOSITORY')
 
 # 動的設定
-PARALLEL_WORKERS = 6     # 並列数を少し下げて安定性向上
-REQUEST_DELAY = 0.2      # 少し長めにしてRate Limit回避
-BATCH_SIZE = 50          # バッチサイズ
-BURST_LIMIT = 15         # バーストリミット
+PARALLEL_WORKERS = 3     # 並列数を下げて安定性向上
+REQUEST_DELAY = 0.5      # レート制限回避のためのディレイ
+BATCH_SIZE = 30          # バッチサイズ
+BURST_LIMIT = 10         # バーストリミット
+RETRY_DELAY = 2.0        # リトライ間隔
+MAX_RETRIES = 3          # 最大リトライ回数
 
 if not TEAM_SETUP_TOKEN or not GITHUB_REPOSITORY:
     raise ValueError("TEAM_SETUP_TOKEN and GITHUB_REPOSITORY environment variables are required")
@@ -85,74 +87,87 @@ def calculate_batches(total_count: int, batch_size: int) -> int:
     return math.ceil(total_count / batch_size)
 
 def create_single_issue(issue_data: Dict, index: int, total: int, issue_type: str) -> Optional[Dict]:
-    """単一のIssueを作成"""
+    """単一のIssueを作成（リトライ機能付き）"""
     session = get_session()
     
-    try:
-        if index > 0:
-            time.sleep(REQUEST_DELAY)
-        
-        response = session.post(
-            f"{API_BASE}/repos/{GITHUB_REPOSITORY}/issues",
-            json=issue_data,
-            timeout=30
-        )
-        
-        if response.status_code == 201:
-            issue = response.json()
-            print(f"  ✅ {issue_type} ({index + 1}/{total}): {issue_data['title'][:50]}...")
-            return issue
-        elif response.status_code == 403:
-            print(f"  ⏳ Rate limit hit, retrying ({index + 1}/{total})...")
-            time.sleep(3)
+    # レート制限回避のためのディレイ
+    if index > 0:
+        time.sleep(REQUEST_DELAY)
+    
+    for attempt in range(MAX_RETRIES):
+        try:
             response = session.post(
                 f"{API_BASE}/repos/{GITHUB_REPOSITORY}/issues",
                 json=issue_data,
                 timeout=30
             )
+            
             if response.status_code == 201:
                 issue = response.json()
-                print(f"  ✅ {issue_type} retry ({index + 1}/{total}): {issue_data['title'][:50]}...")
+                if attempt > 0:
+                    print(f"  ✅ {issue_type} ({index + 1}/{total}) [retry {attempt}]: {issue_data['title'][:50]}...")
+                else:
+                    print(f"  ✅ {issue_type} ({index + 1}/{total}): {issue_data['title'][:50]}...")
                 return issue
-        
-        print(f"  ❌ {issue_type} failed ({index + 1}/{total}): {response.status_code}")
-        return None
-        
-    except Exception as e:
-        print(f"  ❌ {issue_type} exception ({index + 1}/{total}): {str(e)}")
-        return None
+            
+            elif response.status_code == 403:
+                print(f"  ⏳ Rate limit hit ({index + 1}/{total}) [attempt {attempt + 1}]...")
+                time.sleep(RETRY_DELAY * (attempt + 1))  # 指数バックオフ
+                continue
+                
+            elif response.status_code >= 500:
+                print(f"  🔄 Server error ({response.status_code}) ({index + 1}/{total}) [attempt {attempt + 1}]...")
+                time.sleep(RETRY_DELAY * (attempt + 1))
+                continue
+            
+            else:
+                print(f"  ❌ {issue_type} failed ({index + 1}/{total}): {response.status_code} - {response.text[:100]}")
+                break
+                
+        except Exception as e:
+            print(f"  ❌ {issue_type} exception ({index + 1}/{total}) [attempt {attempt + 1}]: {str(e)}")
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_DELAY * (attempt + 1))
+                continue
+    
+    return None
 
-def create_issues_batch(issues_data: List[Tuple], batch_num: int, total_batches: int) -> List[Dict]:
-    """1つのバッチでIssueを作成"""
+def create_issues_batch(issues_data: List[Tuple], batch_num: int, total_batches: int) -> Tuple[List[Dict], List[Tuple]]:
+    """1つのバッチでIssueを作成（失敗したものを返す）"""
     created_issues = []
+    failed_issues = []
     
     if not issues_data:
-        return created_issues
+        return created_issues, failed_issues
     
     print(f"🚀 Processing batch {batch_num}/{total_batches} ({len(issues_data)} issues)")
     
     # 並列実行
     with ThreadPoolExecutor(max_workers=PARALLEL_WORKERS) as executor:
-        futures = []
+        future_to_data = {}
         for i, (issue_data, issue_type) in enumerate(issues_data):
             future = executor.submit(create_single_issue, issue_data, i, len(issues_data), issue_type)
-            futures.append(future)
+            future_to_data[future] = (issue_data, issue_type)
             
             # バーストリミット
             if i > 0 and i % BURST_LIMIT == 0:
-                time.sleep(0.5)
+                time.sleep(0.8)  # 少し長めの休憩
         
         # 結果収集
-        for future in as_completed(futures):
+        for future in as_completed(future_to_data):
+            issue_data, issue_type = future_to_data[future]
             try:
                 issue = future.result(timeout=60)
                 if issue:
                     created_issues.append(issue)
+                else:
+                    failed_issues.append((issue_data, issue_type))
             except Exception as e:
                 print(f"  ❌ Future exception: {str(e)}")
+                failed_issues.append((issue_data, issue_type))
     
-    print(f"📊 Batch {batch_num} result: {len(created_issues)}/{len(issues_data)} issues created")
-    return created_issues
+    print(f"📊 Batch {batch_num} result: {len(created_issues)}/{len(issues_data)} issues created, {len(failed_issues)} failed")
+    return created_issues, failed_issues
 
 def add_issue_to_project_fast(project_id: str, issue: Dict) -> bool:
     """高速でIssueをProjectに追加"""
@@ -272,17 +287,61 @@ def prepare_issue_data(issues: List[Dict], labels: List[str]) -> List[Tuple[Dict
     
     return issue_requests
 
+def retry_failed_issues(failed_issues: List[Tuple], max_retry_rounds: int = 2) -> List[Dict]:
+    """失敗したissueをリトライする"""
+    if not failed_issues:
+        return []
+    
+    print(f"\n🔄 Retrying {len(failed_issues)} failed issues...")
+    
+    retry_created = []
+    remaining_failed = failed_issues.copy()
+    
+    for round_num in range(max_retry_rounds):
+        if not remaining_failed:
+            break
+            
+        print(f"  🔁 Retry round {round_num + 1}/{max_retry_rounds}: {len(remaining_failed)} issues")
+        
+        # リトライ前に長めの休憩
+        time.sleep(3.0)
+        
+        current_round_created, current_round_failed = create_issues_batch(
+            remaining_failed, round_num + 1, max_retry_rounds
+        )
+        
+        retry_created.extend(current_round_created)
+        remaining_failed = current_round_failed
+        
+        # 次のラウンドまでの休憩
+        if remaining_failed and round_num < max_retry_rounds - 1:
+            print(f"    ⏳ Waiting before next retry round...")
+            time.sleep(5.0)
+    
+    if remaining_failed:
+        print(f"  ⚠️ {len(remaining_failed)} issues could not be created after all retries")
+        print("  Failed issues:")
+        for issue_data, issue_type in remaining_failed[:5]:  # 最初の5個だけ表示
+            print(f"    - {issue_type}: {issue_data['title'][:50]}...")
+        if len(remaining_failed) > 5:
+            print(f"    ... and {len(remaining_failed) - 5} more")
+    
+    print(f"  ✅ Retry success: {len(retry_created)} issues created")
+    return retry_created
+
 def main():
     """メイン処理"""
     print("=" * 60)
-    print("🧠 SMART ALL-IN-ONE ISSUE CREATOR v4.1")
+    print("🧠 SMART ALL-IN-ONE ISSUE CREATOR v4.2 (with retry)")
     print("=" * 60)
     print(f"📦 Repository: {GITHUB_REPOSITORY}")
     print(f"⏰ Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"🔧 Script: create_all_issues_smart.py v4.1")
+    print(f"🔧 Script: create_all_issues_smart.py v4.2")
     print(f"⚙️ Configuration:")
     print(f"  • Parallel Workers: {PARALLEL_WORKERS}")
     print(f"  • Request Delay: {REQUEST_DELAY}s")
+    print(f"  • Retry Delay: {RETRY_DELAY}s")
+    print(f"  • Max Retries: {MAX_RETRIES}")
     print(f"  • Batch Size: {BATCH_SIZE}")
     print(f"  • Dependencies: Standard library only")
     print("=" * 60)
@@ -327,8 +386,15 @@ def main():
             
             print(f"\n🔄 Batch {batch_num + 1}/{total_batches}: Processing issues {start_idx + 1}-{end_idx}")
             
-            batch_created = create_issues_batch(batch_requests, batch_num + 1, total_batches)
+            batch_created, batch_failed = create_issues_batch(batch_requests, batch_num + 1, total_batches)
             all_created_issues.extend(batch_created)
+            
+            # 失敗したものを集約
+            if batch_failed:
+                print(f"  📝 {len(batch_failed)} issues failed in this batch, will retry later...")
+                if 'all_failed_issues' not in locals():
+                    all_failed_issues = []
+                all_failed_issues.extend(batch_failed)
             
             # タスク/テスト別に分類
             for issue in batch_created:
@@ -342,6 +408,20 @@ def main():
             if batch_num < total_batches - 1:
                 print(f"  ⏳ Batch pause...")
                 time.sleep(2)
+        
+        # 失敗したもののリトライ
+        retry_created = []
+        if 'all_failed_issues' in locals() and all_failed_issues:
+            retry_created = retry_failed_issues(all_failed_issues)
+            all_created_issues.extend(retry_created)
+            
+            # リトライで作成されたものも分類
+            for issue in retry_created:
+                issue_labels = [label['name'] for label in issue.get('labels', [])]
+                if 'task' in issue_labels:
+                    task_created.append(issue)
+                else:
+                    test_created.append(issue)
         
         # プロジェクトリンク
         task_linked, test_linked = link_issues_to_projects(task_created, test_created, project_ids)
@@ -357,8 +437,13 @@ def main():
         print(f"  • Task issues created: {len(task_created)}")
         print(f"  • Test issues created: {len(test_created)}")
         print(f"  • Total issues created: {len(all_created_issues)}")
+        if retry_created:
+            print(f"  • Retry issues created: {len(retry_created)}")
         print(f"  • Task issues linked: {task_linked}")
         print(f"  • Test issues linked: {test_linked}")
+        final_failed = len(all_failed_issues) - len(retry_created) if 'all_failed_issues' in locals() else 0
+        if final_failed > 0:
+            print(f"  • Final failed issues: {final_failed}")
         print(f"  • Success rate: {(len(all_created_issues)/total_issues*100):.1f}%")
         print(f"⏱️ Performance:")
         print(f"  • Execution time: {execution_time:.1f} seconds")
@@ -371,6 +456,11 @@ def main():
             f.write(f"Task issues: {len(task_created)}\n")
             f.write(f"Test issues: {len(test_created)}\n")
             f.write(f"Total: {len(all_created_issues)}\n")
+            if retry_created:
+                f.write(f"Retry issues: {len(retry_created)}\n")
+            final_failed = len(all_failed_issues) - len(retry_created) if 'all_failed_issues' in locals() else 0
+            if final_failed > 0:
+                f.write(f"Final failed issues: {final_failed}\n")
             f.write(f"Execution time: {execution_time:.1f}s\n")
             f.write(f"Success rate: {(len(all_created_issues)/total_issues*100):.1f}%\n")
         
