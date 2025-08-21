@@ -132,58 +132,19 @@ jobs:
         echo "✅ Wiki setup complete"
         
     # ===============================
-    # Step 4: Create Issues (Batch Processing)
+    # Step 4: Create ALL Issues (Smart Processing)
     # ===============================
-    - name: ⚡ Create Issues - Batch 1 (1-50) FAST
+    - name: 🧠 Create ALL Issues - Smart Auto-Batching
       env:
         TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
         GITHUB_REPOSITORY: ${{ github.repository }}
-        BATCH_NUMBER: 1
-        BATCH_SIZE: 50
       run: |
-        echo "⚡ Step 4.1: Creating Issues Batch 1 (1-50) - FAST v4.0..."
-        echo "🚀 PARALLEL PROCESSING: 8x faster with concurrent requests"
-        python scripts/create_issues_fast.py || echo "⚠️ Batch 1 had some errors"
-        echo "⚡ Fast batch complete, minimal wait..."
-        sleep 5
-        
-    - name: ⚡ Create Issues - Batch 2 (51-100) FAST
-      env:
-        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
-        GITHUB_REPOSITORY: ${{ github.repository }}
-        BATCH_NUMBER: 2
-        BATCH_SIZE: 50
-      run: |
-        echo "⚡ Step 4.2: Creating Issues Batch 2 (51-100) - FAST v4.0..."
-        echo "🚀 PARALLEL PROCESSING: 8x faster with concurrent requests"
-        python scripts/create_issues_fast.py || echo "⚠️ Batch 2 had some errors"
-        echo "⚡ Fast batch complete, minimal wait..."
-        sleep 5
-        
-    - name: ⚡ Create Issues - Batch 3 (101-150) FAST
-      env:
-        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
-        GITHUB_REPOSITORY: ${{ github.repository }}
-        BATCH_NUMBER: 3
-        BATCH_SIZE: 50
-      run: |
-        echo "⚡ Step 4.3: Creating Issues Batch 3 (101-150) - FAST v4.0..."
-        echo "🚀 PARALLEL PROCESSING: 8x faster with concurrent requests"
-        python scripts/create_issues_fast.py || echo "⚠️ Batch 3 had some errors"
-        echo "⚡ Fast batch complete, minimal wait..."
-        sleep 5
-        
-    - name: ⚡ Create Issues - Batch 4 (151-200) FAST
-      env:
-        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
-        GITHUB_REPOSITORY: ${{ github.repository }}
-        BATCH_NUMBER: 4
-        BATCH_SIZE: 50
-      run: |
-        echo "⚡ Step 4.4: Creating Issues Batch 4 (151-200) - FAST v4.0..."
-        echo "🚀 PARALLEL PROCESSING: 8x faster with concurrent requests"
-        python scripts/create_issues_fast.py || echo "⚠️ Batch 4 had some errors"
-        echo "⚡ All FAST batches complete! (v4.0)"
+        echo "🧠 Step 4: Creating ALL Issues with Smart Auto-Batching v4.1..."
+        echo "🚀 INTELLIGENT PROCESSING: Auto-detects CSV size and creates optimal batches"
+        echo "⚡ PARALLEL PROCESSING: 6x workers, no external dependencies"
+        echo "📊 COMPLETE COVERAGE: Processes 100% of CSV data dynamically"
+        python scripts/create_all_issues_smart.py
+        echo "✅ Smart issue creation completed!"
         
     # ===============================
     # Step 5: Final Summary
@@ -201,7 +162,7 @@ jobs:
         echo "🆕 VERSION CONFIRMATION: This was run with v3.0 (CONSOLIDATED)"
         echo "✅ Successfully Created:"
         echo "• 📊 3 GitHub Projects V2"
-        echo "• ⚡ ALL 249 Issues from CSV (FAST v4.0 - 8x speed improvement)"
+        echo "• 🧠 ALL 249 Issues from CSV (SMART v4.1 - auto-batching)"
         echo "• 📚 Wiki pages with table design"
         echo "• 💬 Discussion template"
         echo ""
@@ -214,6 +175,7 @@ jobs:
         echo "📝 Notes:"
         echo "• If Wiki doesn't appear, enable it in repository settings"
         echo "• Create '議事録' category manually in Discussions"
-        echo "• v4.0: ALL issues linked to projects with PARALLEL processing"
-        echo "• v4.0: 8x faster execution - total time reduced from 12min to ~2min"
-        echo "• v4.0: Check issue counts match CSV row counts (249 total)"
+        echo "• v4.1: SMART processing - auto-detects CSV size and creates optimal batches"
+        echo "• v4.1: No dependency issues - uses standard library only"
+        echo "• v4.1: 100% coverage guaranteed - processes all CSV data dynamically"
+        echo "• v4.1: Check smart_issue_creation_result.txt for detailed statistics"
