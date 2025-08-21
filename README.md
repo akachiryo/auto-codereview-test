@@ -1,85 +1,82 @@
 # イマココSNS開発プロジェクト
 
-このプロジェクトは、イマココSNSの開発用リポジトリです。
+このプロジェクトは、未経験エンジニア（アカデミー生）を対象としたチーム開発研修用リポジトリです。
 
-## 🚀 GitHub完結型自動化システム
+## 🚀 チーム開発環境自動セットアップ
 
-### ワンクリックで完全自動セットアップ
+### ワンクリックで完全自動化
 
-[![🚀 Setup Team Environment](https://img.shields.io/badge/🚀_Setup-Click_to_Start-success?style=for-the-badge&logo=github)](../../actions/workflows/setup.yml)
+[![🚀 Team Setup](https://img.shields.io/badge/🚀_Team_Setup-Click_to_Start-success?style=for-the-badge&logo=github)](../../actions/workflows/team-setup.yml)
 
-**リポジトリをcloneしてREADME配置のボタンをワンクリックするだけで以下を完全自動生成：**
+**リポジトリをcloneまたはtemplateでコピーし、README配置のボタンをワンクリックするだけで以下を完全自動生成：**
 
-- 📚 **GitHub Wiki（完全自動）**
-  - **Wiki自動初期化**: 手動で「Create the first page」をクリックする必要なし！
-  - `data/imakoko_sns_tables.csv`からテーブル設計書を自動生成
-  - 参考リンクページとHomeページの自動作成
-  - GitHub Actions内でWikiリポジトリに直接プッシュ
+- 📊 **3つのGitHub Projects V2**
+  - `イマココSNS（タスク）` - 開発タスク管理
+  - `イマココSNS（テスト）` - テスト管理
+  - `イマココSNS（KPTA）` - ふりかえり管理
   
-- 📊 **GitHub Projects V2（完全自動）**
-  - プロジェクト名「イマココSNS」を自動作成
-  - TaskStatusフィールド（Product Backlog → Sprint Backlog → In Progress → Review → Done）
-  - TestStatusフィールド（Not Started → In Progress → Failed/Passed → Blocked）
+- 🎯 **GitHub Issues**
+  - タスクIssues（`data/tasks_for_issues.csv`から自動生成）
+  - テストIssues（`data/tests_for_issues.csv`から自動生成）
+  - 自動ラベル付与とプロジェクトへの紐付け
   
-- 🎯 **GitHub Issues（完全自動）**
-  - `data/tasks_for_issues.csv`から自動的にタスクIssuesを作成
-  - `data/tests_for_issues.csv`から自動的にテストIssuesを作成
-  - 自動ラベル付与（task/development, test/qa）
-  - プロジェクトへの自動紐付け
+- 💬 **GitHub Discussions**
+  - デフォルトカテゴリーの削除
+  - 「議事録」カテゴリーの作成
+  - 議事録テンプレートの投稿
+  
+- 📚 **GitHub Wiki**
+  - HOMEページ
+  - ルール（初期は空）
+  - キックオフ（初期は空）
+  - テーブル設計書（`data/imakoko_sns_tables.csv`から自動生成）
 
-### 🔑 必須: GitHub Tokenの設定
+## 🔑 セットアップ手順
 
-**⚠️ この設定がないと実行できません！**
-
-#### セットアップ手順
+### 1. GitHub Personal Access Tokenの作成
 
 1. **Personal Access Tokenの作成**
    - GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
    - Generate new token (classic) をクリック
    - 必要なスコープ:
-     - ✅ `repo` (Full control)
-     - ✅ `project` (Full control)
-   
+     - ✅ `repo` (Full control of private repositories)
+     - ✅ `project` (Full control of projects)
+
 2. **Repository Secretへの登録**
    - このリポジトリ → Settings → Secrets and variables → Actions
    - New repository secret
    - Name: `TEAM_SETUP_TOKEN`
    - Secret: 作成したトークンを貼り付け
 
-### 📖 使い方
+### 2. Wikiの初期化
 
-1. 上記のセットアップボタンをクリック
+Wikiの「Create the first page」ボタンを押してWikiを有効化してください。
+- リポジトリのWikiタブ → 「Create the first page」をクリック
+- 何でも良いので適当にページを作成（後で自動上書きされます）
+
+### 3. 自動セットアップの実行
+
+1. 上記の「🚀 Team Setup」ボタンをクリック
 2. `Run workflow` をクリック  
 3. `Run workflow` ボタンをクリックして実行
 4. Actions タブで進行状況を確認
 5. 完了後、自動生成されたリソースを確認
 
-### ✨ 完全自動生成される内容
+## 📋 生成されるリソース
 
-#### 📚 Wiki（手動作業不要！）
-- **自動初期化**: Wikiが存在しない場合、自動的に初期ページを作成
-- **テーブル設計書**: CSVから自動生成されたデータベース設計
-- **参考リンク**: プロジェクト関連リンクまとめ  
-- **Home**: Wiki のホームページ
-- **完全自動**: 「Create the first page」の手動クリック不要！
+### GitHub Projects
+- [Projects](../../projects) で3つのプロジェクトが確認できます
+- タスクとテストのIssuesが自動的に各プロジェクトに紐付けられます
 
-#### 📊 Project Views（要手動設定）
-完全自動生成後、以下の手順で2つのビューを作成してください：
+### GitHub Issues
+- [Issues](../../issues) でタスクとテストのIssuesが確認できます
+- 適切なラベルが自動付与されます
 
-**タスクビュー作成：**
-1. [Projects](../../projects) → 作成されたプロジェクトを開く
-2. New view → Board
-3. Name: `タスク`
-4. Group by: `TaskStatus`
-5. Filter: `label:task`
+### GitHub Discussions
+- [Discussions](../../discussions) で議事録カテゴリーとテンプレートが確認できます
 
-**テストビュー作成：**
-1. New view → Board  
-2. Name: `テスト`
-3. Group by: `TestStatus`
-4. Filter: `label:test`
-
-これで要件通りの「タスク」「テスト」の2つのビューが完成します！
+### GitHub Wiki
+- [Wiki](../../wiki) でテーブル設計書とその他のページが確認できます
 
 ## 🛠️ 開発環境
 
@@ -101,6 +98,12 @@ mvn spring-boot:run
 ```
 
 アクセス: http://localhost:8080
+
+## 📝 参考資料
+
+- [チーム開発説明資料](https://docs.google.com/presentation/d/1XO9Ru_5e85g63vwidmGGKmOZdUMKjqPG/edit?slide=id.p1#slide=id.p1)
+- [Figma デザイン](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/イマココSNS)
+- [GitHub ベースリポジトリ](https://github.com/prum-jp/imakoko-base)
 
 ## 📝 ライセンス
 
