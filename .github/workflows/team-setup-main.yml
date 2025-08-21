@@ -1,0 +1,189 @@
+name: 🚀 Team Setup - Main
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  setup-main:
+    runs-on: ubuntu-latest
+    
+    outputs:
+      projects-created: ${{ steps.projects.outputs.success }}
+      wiki-ready: ${{ steps.wiki.outputs.ready }}
+      
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        pip install requests pandas
+        
+    - name: Create GitHub Projects
+      id: projects
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        python scripts/create_projects.py
+        if [ $? -eq 0 ]; then
+          echo "success=true" >> $GITHUB_OUTPUT
+        else
+          echo "success=false" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Setup GitHub Discussions
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        python scripts/setup_discussions.py
+        
+    - name: Initialize Wiki Repository
+      id: wiki-init
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        # GitHub REST APIでWikiを有効化
+        curl -X PATCH \
+          -H "Authorization: token $TEAM_SETUP_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/${{ github.repository }} \
+          -d '{"has_wiki":true}'
+        
+        echo "✅ Wiki enabled for repository"
+        
+    - name: Create initial Wiki page to initialize repository
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        # 一時的なHomeページを作成してWikiリポジトリを初期化
+        TEMP_WIKI_DIR="temp_wiki_init"
+        mkdir -p $TEMP_WIKI_DIR
+        cd $TEMP_WIKI_DIR
+        
+        git init
+        git config user.email "action@github.com"
+        git config user.name "GitHub Action"
+        
+        # 初期Homeページを作成
+        echo "# Wiki Initialization" > Home.md
+        echo "" >> Home.md
+        echo "This page was created to initialize the Wiki repository." >> Home.md
+        echo "Content will be updated by the setup process." >> Home.md
+        echo "" >> Home.md
+        echo "Created: $(date)" >> Home.md
+        
+        git add Home.md
+        git commit -m "Initialize Wiki repository"
+        
+        # Wikiリポジトリにプッシュ
+        git remote add origin https://$TEAM_SETUP_TOKEN@github.com/${{ github.repository }}.wiki.git
+        git push --set-upstream origin master || git push --set-upstream origin main
+        
+        cd ..
+        rm -rf $TEMP_WIKI_DIR
+        
+        echo "✅ Wiki repository initialized with Home page"
+        
+    - name: Wait for Wiki initialization
+      run: |
+        echo "⏳ Waiting for Wiki initialization to complete..."
+        sleep 10
+        
+    - name: Setup GitHub Wiki Content
+      id: wiki
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        python scripts/setup_wiki.py
+        if [ $? -eq 0 ]; then
+          echo "ready=true" >> $GITHUB_OUTPUT
+        else
+          echo "ready=false" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Clone and Update Wiki Repository
+      if: steps.wiki.outputs.ready == 'true'
+      run: |
+        # Wikiリポジトリをクローン
+        git clone https://${{ secrets.TEAM_SETUP_TOKEN }}@github.com/${{ github.repository }}.wiki.git wiki_repo
+        
+        if [ -d "wiki_repo" ]; then
+          cd wiki_repo
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          
+          # 既存ファイルを削除（.gitは保持）
+          find . -not -path './.git*' -type f -delete
+          
+          # 新しいWikiコンテンツをコピー
+          cp ../wiki/* . 2>/dev/null || echo "No wiki files to copy"
+          
+          # 変更をコミット
+          git add .
+          if ! git diff --staged --quiet; then
+            git commit -m "🚀 Auto-generated Wiki pages from team setup"
+            git push
+            echo "✅ Wiki pages updated successfully"
+          else
+            echo "ℹ️ No changes to commit to Wiki"
+          fi
+        else
+          echo "❌ Failed to clone Wiki repository"
+        fi
+        
+    - name: Upload project IDs artifact
+      uses: actions/upload-artifact@v4
+      if: steps.projects.outputs.success == 'true'
+      with:
+        name: project-ids
+        path: project_ids.txt
+        retention-days: 1
+        
+    - name: Display setup results
+      run: |
+        echo "✨ Main setup completed!"
+        echo ""
+        echo "📋 Completed:"
+        echo "• 📊 GitHub Projects V2: ${{ steps.projects.outputs.success == 'true' && '✅ Created' || '❌ Failed' }}"
+        echo "• 💬 Discussions: ✅ Template created"
+        echo "• 📚 Wiki: ${{ steps.wiki.outputs.ready == 'true' && '✅ Ready' || '❌ Failed' }}"
+        echo ""
+        echo "🔄 Next Steps:"
+        echo "• Run team-setup-issues-1.yml to create Issues (Batch 1/4)"
+        echo ""
+        echo "🔗 Access your resources:"
+        echo "• Projects: https://github.com/${{ github.repository }}/projects"
+        echo "• Discussions: https://github.com/${{ github.repository }}/discussions"
+        echo "• Wiki: https://github.com/${{ github.repository }}/wiki"
+
+  trigger-batch-1:
+    needs: setup-main
+    if: needs.setup-main.outputs.projects-created == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Trigger Issue Creation Batch 1
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.TEAM_SETUP_TOKEN }}
+        script: |
+          await github.rest.actions.createWorkflowDispatch({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflow_id: 'team-setup-issues-1.yml'
+          });
+          console.log('✅ Triggered Issue Creation Batch 1');

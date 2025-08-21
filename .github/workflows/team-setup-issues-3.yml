@@ -1,0 +1,83 @@
+name: 🎯 Team Setup - Issues Batch 3
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  create-issues-batch-3:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        pip install requests pandas
+        
+    - name: Download project IDs
+      uses: actions/download-artifact@v4
+      with:
+        name: project-ids
+      continue-on-error: true
+        
+    - name: Create Issues Batch 3 (101-150)
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        BATCH_NUMBER: 3
+        BATCH_SIZE: 50
+      run: |
+        echo "🎯 Starting Issue Creation - Batch 3 (Issues 101-150)"
+        python scripts/create_issues_batch.py
+        
+    - name: Upload batch completion status
+      uses: actions/upload-artifact@v4
+      with:
+        name: batch-3-status
+        path: batch_3_completed.txt
+        retention-days: 1
+        
+    - name: Wait before next batch
+      run: |
+        echo "⏳ Waiting 30 seconds before triggering final batch..."
+        sleep 30
+        
+    - name: Trigger Issue Creation Batch 4
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.TEAM_SETUP_TOKEN }}
+        script: |
+          try {
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'team-setup-issues-4.yml'
+            });
+            console.log('✅ Triggered Issue Creation Batch 4 (Final)');
+          } catch (error) {
+            console.log('⚠️ Could not trigger Batch 4:', error.message);
+            console.log('💡 Please manually run team-setup-issues-4.yml');
+          }
+        
+    - name: Display batch results
+      run: |
+        echo "✨ Batch 3 completed!"
+        echo ""
+        echo "📊 Status:"
+        if [ -f batch_3_completed.txt ]; then
+          cat batch_3_completed.txt
+        else
+          echo "❌ Batch completion file not found"
+        fi
+        echo ""
+        echo "🔄 Next: Batch 4 (Issues 151-197) - Final batch starting..."
+        echo "🔗 Monitor: https://github.com/${{ github.repository }}/actions"

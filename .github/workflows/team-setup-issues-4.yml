@@ -1,0 +1,111 @@
+name: 🎯 Team Setup - Issues Batch 4 (Final)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  create-issues-batch-4:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        pip install requests pandas
+        
+    - name: Download project IDs
+      uses: actions/download-artifact@v4
+      with:
+        name: project-ids
+      continue-on-error: true
+        
+    - name: Create Issues Batch 4 (151-197)
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        BATCH_NUMBER: 4
+        BATCH_SIZE: 50
+      run: |
+        echo "🎯 Starting Issue Creation - Batch 4 (Issues 151-197) - Final Batch"
+        python scripts/create_issues_batch.py
+        
+    - name: Upload batch completion status
+      uses: actions/upload-artifact@v4
+      with:
+        name: batch-4-status
+        path: batch_4_completed.txt
+        retention-days: 1
+        
+    - name: Download all batch statuses
+      uses: actions/download-artifact@v4
+      with:
+        pattern: batch-*-status
+        merge-multiple: true
+      continue-on-error: true
+        
+    - name: Generate final summary
+      run: |
+        echo "🎉 All Issue Creation Batches Completed!"
+        echo ""
+        echo "📊 Final Summary:"
+        echo "=================================="
+        
+        total_task_issues=0
+        total_test_issues=0
+        
+        for i in {1..4}; do
+          if [ -f "batch_${i}_completed.txt" ]; then
+            echo ""
+            echo "📋 Batch $i Status:"
+            echo "-------------------"
+            cat "batch_${i}_completed.txt"
+            
+            # Extract numbers from completion files
+            task_count=$(grep "Task issues:" "batch_${i}_completed.txt" | grep -o '[0-9]\+' || echo "0")
+            test_count=$(grep "Test issues:" "batch_${i}_completed.txt" | grep -o '[0-9]\+' || echo "0")
+            
+            total_task_issues=$((total_task_issues + task_count))
+            total_test_issues=$((total_test_issues + test_count))
+          else
+            echo ""
+            echo "❌ Batch $i: Status file not found"
+          fi
+        done
+        
+        echo ""
+        echo "🏆 GRAND TOTAL:"
+        echo "=================================="
+        echo "📝 Total Task Issues Created: $total_task_issues"
+        echo "🧪 Total Test Issues Created: $total_test_issues"
+        echo "📊 Total Issues Created: $((total_task_issues + total_test_issues))"
+        echo ""
+        echo "✨ Team Development Environment Setup Complete!"
+        echo ""
+        echo "🔗 Access your resources:"
+        echo "• Issues: https://github.com/${{ github.repository }}/issues"
+        echo "• Projects: https://github.com/${{ github.repository }}/projects"
+        echo "• Discussions: https://github.com/${{ github.repository }}/discussions"
+        echo "• Wiki: https://github.com/${{ github.repository }}/wiki"
+        echo ""
+        echo "🎯 Ready for Team Development!"
+        
+    - name: Display final completion message
+      run: |
+        echo ""
+        echo "🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊"
+        echo "🎊                                                🎊"
+        echo "🎊    チーム開発環境セットアップ完了！            🎊"
+        echo "🎊    Team Development Setup Complete!           🎊"
+        echo "🎊                                                🎊"
+        echo "🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊🎊"
+        echo ""

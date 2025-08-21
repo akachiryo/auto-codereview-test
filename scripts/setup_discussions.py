@@ -44,13 +44,69 @@ def graphql_request(query: str, variables: Dict = None) -> Dict:
     
     return data.get('data', {})
 
+def check_discussions_enabled() -> bool:
+    """リポジトリでDiscussionsが有効化されているかチェック"""
+    # API Reference: https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28
+    url = f"https://api.github.com/repos/{GITHUB_REPOSITORY}"
+    headers = {
+        'Authorization': f'token {TEAM_SETUP_TOKEN}',
+        'Accept': 'application/vnd.github.v3+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+    }
+    
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        repo_data = response.json()
+        discussions_enabled = repo_data.get('has_discussions', False)
+        print(f"🔍 Discussions enabled: {discussions_enabled}")
+        return discussions_enabled
+    else:
+        print(f"⚠️ Could not check discussions status: {response.status_code}")
+        return False
+
+def enable_discussions() -> bool:
+    """リポジトリでDiscussionsを有効化"""
+    # API Reference: https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28
+    url = f"https://api.github.com/repos/{GITHUB_REPOSITORY}"
+    headers = {
+        'Authorization': f'token {TEAM_SETUP_TOKEN}',
+        'Accept': 'application/vnd.github.v3+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+    }
+    
+    data = {'has_discussions': True}
+    response = requests.patch(url, json=data, headers=headers)
+    
+    if response.status_code == 200:
+        print("✅ Discussions enabled successfully")
+        return True
+    else:
+        print(f"❌ Failed to enable discussions: {response.status_code} - {response.text}")
+        return False
+
 def get_repository_info() -> Optional[Dict]:
     """リポジトリ情報とDiscussionカテゴリーを取得"""
+    # まずDiscussionsが有効かチェック
+    if not check_discussions_enabled():
+        print("📝 Discussions not enabled, attempting to enable...")
+        if not enable_discussions():
+            print("⚠️ Could not enable discussions automatically")
+            print("💡 Please enable discussions manually:")
+            print(f"   1. Go to https://github.com/{GITHUB_REPOSITORY}/settings")
+            print("   2. Scroll down to 'Features' section")
+            print("   3. Check 'Discussions' checkbox")
+            return None
+        else:
+            # 有効化後少し待機
+            print("⏳ Waiting for discussions to be fully enabled...")
+            time.sleep(5)
+    
     # API Reference: https://docs.github.com/en/graphql/reference/objects#repository
     query = """
     query($owner: String!, $name: String!) {
         repository(owner: $owner, name: $name) {
             id
+            hasDiscussionsEnabled
             discussionCategories(first: 20) {
                 nodes {
                     id
@@ -71,7 +127,10 @@ def get_repository_info() -> Optional[Dict]:
     
     result = graphql_request(query, variables)
     if result and 'repository' in result:
-        return result['repository']
+        repo = result['repository']
+        print(f"📊 Repository discussions enabled: {repo.get('hasDiscussionsEnabled', 'Unknown')}")
+        print(f"📊 Found {len(repo.get('discussionCategories', {}).get('nodes', []))} discussion categories")
+        return repo
     return None
 
 def delete_category(category_id: str, category_name: str) -> bool:
@@ -162,11 +221,15 @@ def main():
     repository_id = repo_info['id']
     existing_categories = repo_info['discussionCategories']['nodes']
     
-    print(f"\n🗑️ Removing default categories...")
-    # デフォルトカテゴリーを削除
+    print(f"\n🗑️ Attempting to remove default categories...")
+    # デフォルトカテゴリーを削除（API制限で失敗する可能性あり）
+    categories_deleted = 0
     for category in existing_categories:
-        delete_category(category['id'], category['name'])
+        if delete_category(category['id'], category['name']):
+            categories_deleted += 1
         time.sleep(1)  # Rate limit対策
+    
+    print(f"📊 Successfully deleted {categories_deleted}/{len(existing_categories)} categories")
     
     print(f"\n📝 Trying to work with discussions...")
     
@@ -244,9 +307,19 @@ YYYY/MM/DD HH:MM ～ HH:MM
     
     print(f"\n✨ Discussions setup completed!")
     print(f"📌 Setup result:")
-    print(f"  • Meeting minutes template created")
+    if existing_categories:
+        print(f"  • Meeting minutes template created in existing category")
+        print(f"  • Deleted {categories_deleted}/{len(existing_categories)} default categories")
+        if categories_deleted < len(existing_categories):
+            print(f"  ⚠️ Some categories could not be deleted (API limitations)")
+    else:
+        print(f"  • No existing categories found")
+        
     print(f"  • Instructions provided for manual category creation")
-    print(f"  ⚠️ Note: '議事録' category requires manual creation due to GitHub API limitations")
+    print(f"\n💡 Manual setup recommended:")
+    print(f"  1. Go to https://github.com/{GITHUB_REPOSITORY}/discussions/categories")
+    print(f"  2. Create new category: 議事録")
+    print(f"  3. Move the template discussion to the new category")
     
     print(f"\n🔗 Access your discussions:")
     print(f"  https://github.com/{GITHUB_REPOSITORY}/discussions")

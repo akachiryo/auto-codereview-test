@@ -208,23 +208,81 @@ Wiki生成中にエラーが発生しました。手動でページを作成し�
             print(f"  ❌ Fallback also failed: {str(fallback_error)}")
             return False
 
+def verify_wiki_content():
+    """生成されたWikiコンテンツを検証"""
+    wiki_path = 'wiki'
+    expected_files = ['Home.md', 'テーブル設計書.md', 'ルール.md', 'キックオフ.md']
+    
+    print("🔍 Verifying generated Wiki content...")
+    
+    if not os.path.exists(wiki_path):
+        print(f"❌ Wiki directory not found: {wiki_path}")
+        return False
+    
+    missing_files = []
+    for filename in expected_files:
+        file_path = os.path.join(wiki_path, filename)
+        if not os.path.exists(file_path):
+            missing_files.append(filename)
+        else:
+            # ファイルサイズもチェック
+            file_size = os.path.getsize(file_path)
+            if file_size < 100:  # 100バイト未満は内容不足の可能性
+                print(f"⚠️ {filename}: Small file size ({file_size} bytes)")
+            else:
+                print(f"✅ {filename}: OK ({file_size} bytes)")
+    
+    if missing_files:
+        print(f"❌ Missing files: {', '.join(missing_files)}")
+        return False
+    
+    print("✅ All Wiki files verified successfully")
+    return True
+
 def main():
     """メイン処理"""
     print("📚 Setting up GitHub Wiki...")
     print(f"📦 Repository: {GITHUB_REPOSITORY}")
     
-    # Wikiコンテンツの生成
-    success = generate_wiki_content()
-    
-    if success:
-        print(f"\n✨ Wiki setup completed!")
-        print(f"📌 Generated wiki pages ready for Git operations")
-        print(f"\n💡 Note: Wiki pages will be committed and pushed by GitHub Actions workflow")
-        print(f"\n🔗 Wiki will be available at:")
-        print(f"  https://github.com/{GITHUB_REPOSITORY}/wiki")
-        return 0
-    else:
-        print(f"\n❌ Wiki setup failed!")
+    try:
+        # Wikiコンテンツの生成
+        success = generate_wiki_content()
+        
+        if success:
+            # 生成されたコンテンツを検証
+            verification_success = verify_wiki_content()
+            
+            if verification_success:
+                print(f"\n✨ Wiki setup completed successfully!")
+                print(f"📌 Generated wiki pages ready for Git operations")
+                print(f"\n📋 Generated files:")
+                wiki_files = os.listdir('wiki') if os.path.exists('wiki') else []
+                for file in sorted(wiki_files):
+                    print(f"  • {file}")
+                    
+                print(f"\n💡 Note: Wiki pages will be committed and pushed by GitHub Actions workflow")
+                print(f"\n🔗 Wiki will be available at:")
+                print(f"  https://github.com/{GITHUB_REPOSITORY}/wiki")
+                return 0
+            else:
+                print(f"\n⚠️ Wiki setup completed with issues!")
+                print(f"📌 Some content may be missing or incomplete")
+                return 1
+        else:
+            print(f"\n❌ Wiki setup failed!")
+            return 1
+            
+    except Exception as e:
+        print(f"\n💥 Unexpected error during Wiki setup: {str(e)}")
+        print(f"🔧 Error type: {type(e).__name__}")
+        
+        # デバッグ情報の出力
+        print(f"\n🔍 Debug information:")
+        print(f"  • Current working directory: {os.getcwd()}")
+        print(f"  • Wiki directory exists: {os.path.exists('wiki')}")
+        print(f"  • Data directory exists: {os.path.exists('data')}")
+        print(f"  • CSV file exists: {os.path.exists('data/imakoko_sns_tables.csv')}")
+        
         return 1
 
 if __name__ == '__main__':

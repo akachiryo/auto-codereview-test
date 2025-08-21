@@ -4,25 +4,22 @@
 
 ## 🚀 チーム開発環境自動セットアップ
 
-### ワンクリックで完全自動化
+### バッチ処理による安定した自動化
 
-[![🚀 Team Setup](https://img.shields.io/badge/🚀_Team_Setup-Click_to_Start-success?style=for-the-badge&logo=github)](../../actions/workflows/team-setup.yml)
+[![🚀 Main Setup](https://img.shields.io/badge/🚀_Main_Setup-Start_Here-success?style=for-the-badge&logo=github)](../../actions/workflows/team-setup-main.yml)
 
-**リポジトリをcloneまたはtemplateでコピーし、README配置のボタンをワンクリックするだけで以下を完全自動生成：**
+**リポジトリをcloneまたはtemplateでコピーし、上記ボタンをクリックして段階的に以下を自動生成：**
 
+### 🔄 自動セットアップフロー
+
+#### **Step 1: メインセットアップ** ← まずここから開始
 - 📊 **3つのGitHub Projects V2**
   - `イマココSNS（タスク）` - 開発タスク管理
   - `イマココSNS（テスト）` - テスト管理
   - `イマココSNS（KPTA）` - ふりかえり管理
   
-- 🎯 **GitHub Issues**
-  - タスクIssues（`data/tasks_for_issues.csv`から自動生成）
-  - テストIssues（`data/tests_for_issues.csv`から自動生成）
-  - 自動ラベル付与とプロジェクトへの紐付け
-  
 - 💬 **GitHub Discussions**
-  - デフォルトカテゴリーの削除
-  - 「議事録」カテゴリーの作成
+  - 自動で有効化
   - 議事録テンプレートの投稿
   
 - 📚 **GitHub Wiki**
@@ -30,6 +27,15 @@
   - ルール（初期は空）
   - キックオフ（初期は空）
   - テーブル設計書（`data/imakoko_sns_tables.csv`から自動生成）
+
+#### **Step 2-5: Issue作成バッチ** ← 自動で順次実行
+- 🎯 **197件の全GitHub Issues**
+  - **Batch 1**: Issues 1-50
+  - **Batch 2**: Issues 51-100  
+  - **Batch 3**: Issues 101-150
+  - **Batch 4**: Issues 151-197
+  - 自動ラベル付与とプロジェクトへの紐付け
+  - Rate Limit完全対応
 
 ## 🔑 セットアップ手順
 
@@ -48,35 +54,44 @@
    - Name: `TEAM_SETUP_TOKEN`
    - Secret: 作成したトークンを貼り付け
 
-### 2. Wikiの初期化
+### 2. ~~Wikiの初期化~~ ← 不要！
 
-Wikiの「Create the first page」ボタンを押してWikiを有効化してください。
-- リポジトリのWikiタブ → 「Create the first page」をクリック
-- 何でも良いので適当にページを作成（後で自動上書きされます）
+~~Wikiの初期化は自動化されているため手動操作不要です~~
+✅ **Wiki有効化とページ作成は完全自動化済み**
 
 ### 3. 自動セットアップの実行
 
-1. 上記の「🚀 Team Setup」ボタンをクリック
+1. 上記の「🚀 Main Setup」ボタンをクリック
 2. `Run workflow` をクリック  
 3. `Run workflow` ボタンをクリックして実行
-4. Actions タブで進行状況を確認
-5. 完了後、自動生成されたリソースを確認
+4. **重要**: メインセットアップが完了すると、Issue作成バッチが自動で順次実行されます
+5. [Actions](../../actions) タブで全体の進行状況を確認
+6. 全バッチ完了まで約10-15分程度お待ちください
+
+### 📊 実行監視
+
+- **メインセットアップ**: Projects、Wiki、Discussionsを作成
+- **Issue Batch 1-4**: 自動で30秒間隔で順次実行
+- **完了確認**: 最終バッチで全体サマリーを表示
 
 ## 📋 生成されるリソース
 
 ### GitHub Projects
 - [Projects](../../projects) で3つのプロジェクトが確認できます
-- タスクとテストのIssuesが自動的に各プロジェクトに紐付けられます
+- **197件**のタスクとテストIssuesが各プロジェクトに自動紐付け
 
-### GitHub Issues
-- [Issues](../../issues) でタスクとテストのIssuesが確認できます
-- 適切なラベルが自動付与されます
+### GitHub Issues  
+- [Issues](../../issues) で**197件**のIssuesが確認できます
+- タスク: 15件、テスト: 182件
+- 適切なラベルが自動付与されプロジェクトに紐付け済み
 
 ### GitHub Discussions
-- [Discussions](../../discussions) で議事録カテゴリーとテンプレートが確認できます
+- [Discussions](../../discussions) で議事録テンプレートが確認できます
+- 自動で有効化、議事録カテゴリーは手動作成を推奨
 
 ### GitHub Wiki
-- [Wiki](../../wiki) でテーブル設計書とその他のページが確認できます
+- [Wiki](../../wiki) で4つのページが確認できます
+- テーブル設計書はCSVから自動生成済み
 
 ## 🛠️ 開発環境
 
