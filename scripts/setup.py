@@ -71,10 +71,7 @@ def initialize_wiki_api():
         response = make_request('GET', repo_url)
         if response.status_code == 200:
             repo_data = response.json()
-            if repo_data.get('has_wiki', False):
-                print("✅ Wiki is already enabled for this repository")
-                return True
-            else:
+            if not repo_data.get('has_wiki', False):
                 # Wikiを有効化
                 print("📝 Enabling Wiki for repository...")
                 update_data = {'has_wiki': True}
@@ -82,17 +79,28 @@ def initialize_wiki_api():
                 
                 if update_response.status_code == 200:
                     print("✅ Wiki enabled successfully")
-                    return True
                 else:
                     print(f"⚠️ Failed to enable Wiki: {update_response.text}")
                     return True  # 続行
+            else:
+                print("✅ Wiki is already enabled for this repository")
+        
+        # Wikiリポジトリの存在確認（.wikiリポジトリ）
+        wiki_repo_url = f"{API_BASE}/repos/{REPO}.wiki"
+        wiki_check = make_request('GET', wiki_repo_url)
+        
+        if wiki_check.status_code == 404:
+            print("📄 Wiki repository doesn't exist yet")
+            print("💡 Initial Wiki pages will be created by GitHub Actions workflow")
+        else:
+            print("✅ Wiki repository already exists")
+        
+        return True
         
     except Exception as e:
         print(f"⚠️ Wiki initialization error: {str(e)}")
         print("💡 Continuing with Wiki creation process...")
         return True  # エラーでも続行
-    
-    return True
 
 
 def create_wiki_pages():
