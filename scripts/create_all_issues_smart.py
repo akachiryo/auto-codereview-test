@@ -11,7 +11,7 @@ import csv
 import time
 import sys
 from typing import Dict, List, Optional, Tuple
-from concurrent.futures import ThreadPoolExecutor, as_completed
+# from concurrent.futures import ThreadPoolExecutor, as_completed  # 並列処理無効化
 import threading
 import math
 
@@ -20,7 +20,7 @@ TEAM_SETUP_TOKEN = os.environ.get('TEAM_SETUP_TOKEN')
 GITHUB_REPOSITORY = os.environ.get('GITHUB_REPOSITORY')
 
 # 動的設定
-PARALLEL_WORKERS = 3     # 並列数を下げて安定性向上
+PARALLEL_WORKERS = 1     # 順番保持のためシーケンシャル処理
 REQUEST_DELAY = 0.5      # レート制限回避のためのディレイ
 BATCH_SIZE = 30          # バッチサイズ
 BURST_LIMIT = 10         # バーストリミット
@@ -142,29 +142,17 @@ def create_issues_batch(issues_data: List[Tuple], batch_num: int, total_batches:
     
     print(f"🚀 Processing batch {batch_num}/{total_batches} ({len(issues_data)} issues)")
     
-    # 並列実行
-    with ThreadPoolExecutor(max_workers=PARALLEL_WORKERS) as executor:
-        future_to_data = {}
-        for i, (issue_data, issue_type) in enumerate(issues_data):
-            future = executor.submit(create_single_issue, issue_data, i, len(issues_data), issue_type)
-            future_to_data[future] = (issue_data, issue_type)
-            
-            # バーストリミット
-            if i > 0 and i % BURST_LIMIT == 0:
-                time.sleep(0.8)  # 少し長めの休憩
-        
-        # 結果収集
-        for future in as_completed(future_to_data):
-            issue_data, issue_type = future_to_data[future]
-            try:
-                issue = future.result(timeout=60)
-                if issue:
-                    created_issues.append(issue)
-                else:
-                    failed_issues.append((issue_data, issue_type))
-            except Exception as e:
-                print(f"  ❌ Future exception: {str(e)}")
+    # シーケンシャル実行（順番保持のため）
+    for i, (issue_data, issue_type) in enumerate(issues_data):
+        try:
+            issue = create_single_issue(issue_data, i, len(issues_data), issue_type)
+            if issue:
+                created_issues.append(issue)
+            else:
                 failed_issues.append((issue_data, issue_type))
+        except Exception as e:
+            print(f"  ❌ Exception: {str(e)}")
+            failed_issues.append((issue_data, issue_type))
     
     print(f"📊 Batch {batch_num} result: {len(created_issues)}/{len(issues_data)} issues created, {len(failed_issues)} failed")
     return created_issues, failed_issues
@@ -213,20 +201,15 @@ def link_issues_to_projects(task_issues: List[Dict], test_issues: List[Dict], pr
         print(f"  📌 Linking {len(issues)} {issue_type} issues to {project_name}")
         success_count = 0
         
-        with ThreadPoolExecutor(max_workers=PARALLEL_WORKERS) as executor:
-            futures = []
-            for issue in issues:
-                future = executor.submit(add_issue_to_project_fast, project_id, issue)
-                futures.append(future)
-            
-            for i, future in enumerate(as_completed(futures)):
-                try:
-                    if future.result(timeout=30):
-                        success_count += 1
-                    if (i + 1) % 20 == 0:
-                        print(f"    ✅ Linked {i + 1}/{len(issues)} to {project_name}")
-                except Exception as e:
-                    print(f"    ❌ Link exception: {str(e)}")
+        for i, issue in enumerate(issues):
+            try:
+                if add_issue_to_project_fast(project_id, issue):
+                    success_count += 1
+                if (i + 1) % 20 == 0:
+                    print(f"    ✅ Linked {i + 1}/{len(issues)} to {project_name}")
+            except Exception as e:
+                print(f"    ❌ Link exception: {str(e)}")
+            time.sleep(0.1)  # プロジェクトリンクも少し間隔を空ける
         
         print(f"  📊 {project_name}: {success_count}/{len(issues)} issues linked")
         return success_count
@@ -264,25 +247,53 @@ def load_project_ids() -> Dict[str, str]:
     return project_ids
 
 def prepare_issue_data(issues: List[Dict], labels: List[str]) -> List[Tuple[Dict, str]]:
-    """Issue作成用のデータを準備"""
+    """Issue作成用のデータを準備（番号付きタイトル）"""
     issue_requests = []
-    for row in issues:
+    issue_type = 'task' if 'task' in labels else 'test'
+    
+    for index, row in enumerate(issues, 1):
         title = row.get('title', '').strip()
         body = row.get('body', '').strip()
         
         if not title:
             continue
+        
+        # タイトルに番号を追加（既に番号がある場合は置き換え）
+        if issue_type == 'task':
+            # 「タスク」で始まる場合は、番号を置き換え
+            if title.startswith('タスク'):
+                # 「タスク」の後の数字やコロンを削除し、本文を抽出
+                import re
+                match = re.match(r'タスク[\d\s:.]*(.+)', title)
+                if match:
+                    clean_title = match.group(1).strip()
+                else:
+                    clean_title = title
+                numbered_title = f"タスク{index:03d}: {clean_title}"
+            else:
+                numbered_title = f"タスク{index:03d}: {title}"
+        else:
+            # 「テスト」で始まる場合は、番号を置き換え
+            if title.startswith('テスト'):
+                import re
+                match = re.match(r'テスト[\d\s:.]*(.+)', title)
+                if match:
+                    clean_title = match.group(1).strip()
+                else:
+                    clean_title = title
+                numbered_title = f"テスト{index:03d}: {clean_title}"
+            else:
+                numbered_title = f"テスト{index:03d}: {title}"
             
         existing_labels = [label.strip() for label in row.get('labels', '').split(',') if label.strip()]
         all_labels = list(set(existing_labels + labels))
         
         issue_data = {
-            'title': title,
+            'title': numbered_title,
             'body': body,
             'labels': all_labels
         }
         
-        issue_type = 'task' if 'task' in labels else 'test'
         issue_requests.append((issue_data, issue_type))
     
     return issue_requests
@@ -332,11 +343,11 @@ def retry_failed_issues(failed_issues: List[Tuple], max_retry_rounds: int = 2) -
 def main():
     """メイン処理"""
     print("=" * 60)
-    print("🧠 SMART ALL-IN-ONE ISSUE CREATOR v4.2 (with retry)")
+    print("🧠 SMART ALL-IN-ONE ISSUE CREATOR v4.3 (sequential + numbered)")
     print("=" * 60)
     print(f"📦 Repository: {GITHUB_REPOSITORY}")
     print(f"⏰ Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"🔧 Script: create_all_issues_smart.py v4.2")
+    print(f"🔧 Script: create_all_issues_smart.py v4.3")
     print(f"⚙️ Configuration:")
     print(f"  • Parallel Workers: {PARALLEL_WORKERS}")
     print(f"  • Request Delay: {REQUEST_DELAY}s")
