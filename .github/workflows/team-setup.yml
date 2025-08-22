@@ -7,6 +7,8 @@ permissions:
   contents: write
   issues: write
   discussions: write
+  pages: write
+  id-token: write
 
 jobs:
   setup-environment:
@@ -91,8 +93,8 @@ jobs:
         # Generate wiki content
         python scripts/setup_wiki.py
         
-        # Convert slides to Wiki-compatible format
-        echo "📊 Converting presentation slides to Wiki pages..."
+        # Convert slides to Wiki-compatible format (text version only)
+        echo "📝 Converting presentation slides to Wiki pages..."
         python scripts/convert_slides_to_wiki.py
         
         # Initialize wiki repository if needed
@@ -157,7 +159,24 @@ jobs:
         echo "✅ Smart issue creation completed!"
         
     # ===============================
-    # Step 5: Final Summary
+    # Step 5: Publish Slides to GitHub Pages
+    # ===============================
+    - name: 📊 Trigger Slides Publication
+      run: |
+        echo "📊 Step 5: Triggering slides publication to GitHub Pages..."
+        
+        # Trigger the slides workflow
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/${{ github.repository }}/actions/workflows/publish-slides.yml/dispatches \
+          -d '{"ref":"${{ github.ref }}"}'
+        
+        echo "✅ Slides publication triggered"
+        echo "📖 Slides will be available at: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+        
+    # ===============================
+    # Step 6: Final Summary
     # ===============================
     - name: 🎉 Display Final Summary
       run: |
@@ -175,13 +194,14 @@ jobs:
         echo "• 🧠 ALL 249 Issues from CSV (SMART v4.1 - auto-batching)"
         echo "• 📚 Wiki pages with table design"
         echo "• 💬 Discussion template"
-        echo "• 📊 Presentation slides in Wiki"
+        echo "• 📊 Presentation slides (Wiki + GitHub Pages)"
         echo ""
         echo "🔗 Access your resources:"
         echo "• Projects: https://github.com/${{ github.repository }}/projects"
         echo "• Issues: https://github.com/${{ github.repository }}/issues"
         echo "• Wiki: https://github.com/${{ github.repository }}/wiki"
         echo "• Discussions: https://github.com/${{ github.repository }}/discussions"
+        echo "• Slides: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
         echo ""
         echo "📝 Notes:"
         echo "• If Wiki doesn't appear, enable it in repository settings"

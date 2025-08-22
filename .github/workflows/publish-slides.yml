@@ -1,0 +1,56 @@
+name: Publish Slides to GitHub Pages
+
+on:
+  workflow_dispatch:  # 手動実行
+  workflow_call:      # 他のワークフローから呼び出し可能
+  push:
+    paths:
+      - 'data/チーム開発説明資料.md'  # スライドファイルが更新された時
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同時実行を防ぐ
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate slides with Marp
+        uses: marp-team/marp-action@v3
+        with:
+          dir: data
+          output: docs
+          filename: index.html
+          theme: gaia
+          # PDFも同時生成
+          pdf: true
+          # HTMLとPDFの両方を生成
+          args: '--allow-local-files --html'
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
