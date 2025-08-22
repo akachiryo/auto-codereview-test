@@ -84,16 +84,20 @@ def generate_wiki_content(wiki_path: str = 'wiki'):
         os.makedirs(wiki_path, exist_ok=True)
         print(f"📂 Wiki directory created/verified: {wiki_path}")
         
-        # 1. HOMEページ
+        # 1. HOMEページ (プレゼンテーション対応)
         home_content = f"""# イマココSNS Wiki
 
 イマココSNS開発プロジェクトのWikiページです。
+
+## 📊 プレゼンテーション資料
+
+- [[Team-Development-Presentation|チーム開発説明資料]] - プロジェクトキックオフ資料
 
 ## 📋 ドキュメント一覧
 
 - [[テーブル設計書]] - データベース設計の詳細
 - [[ルール]] - チーム開発のルールとガイドライン
-- [[キックオフ]] - プロジェクトキックオフ資料
+- [[キックオフ]] - プロジェクト開始情報
 
 ## 🔗 関連リンク
 
@@ -104,7 +108,6 @@ def generate_wiki_content(wiki_path: str = 'wiki'):
 
 ## 📝 参考資料
 
-- [チーム開発説明資料](https://docs.google.com/presentation/d/1XO9Ru_5e85g63vwidmGGKmOZdUMKjqPG/edit?slide=id.p1#slide=id.p1)
 - [Figma デザイン](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/イマココSNS)
 - [GitHub ベースリポジトリ](https://github.com/prum-jp/imakoko-base)
 

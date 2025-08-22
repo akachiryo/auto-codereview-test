@@ -79,23 +79,33 @@ jobs:
         echo "✅ Discussions setup complete"
         
     # ===============================
-    # Step 3: Setup Wiki
+    # Step 3: Setup Wiki with Slides
     # ===============================
     - name: 📚 Setup GitHub Wiki
       env:
         TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
         GITHUB_REPOSITORY: ${{ github.repository }}
       run: |
-        echo "📚 Step 3: Setting up Wiki (v3.1 - syntax fix)..."
+        echo "📚 Step 3: Setting up Wiki with slides..."
         
         # Generate wiki content
         python scripts/setup_wiki.py
         
+        # Convert slides to Wiki-compatible format
+        echo "📊 Converting presentation slides to Wiki pages..."
+        python scripts/convert_slides_to_wiki.py
+        
         # Initialize wiki repository if needed
         if [ -d "wiki" ]; then
-          echo "📝 Initializing Wiki repository (v3.0)..."
-          echo "📝 Found wiki directory, listing contents:"
-          ls -la wiki/
+          echo "📝 Initializing Wiki repository..."
+          
+          # Home.mdは既にsetup_wiki.pyで適切に生成されているので、
+          # プレゼンテーションページの存在だけ確認
+          if [ -f "wiki/Team-Development-Presentation.md" ]; then
+            echo "✅ Team-Development-Presentation.md created successfully"
+          else
+            echo "❌ Failed to create presentation page"
+          fi
           
           # Create temporary directory for wiki operations
           WIKI_DIR="wiki_repository"
@@ -108,12 +118,12 @@ jobs:
           git config user.email "action@github.com"
           git config user.name "GitHub Action"
           
-          # Copy generated wiki content
+          # Copy all wiki content including presentation
           cp -r ../wiki/* . 2>/dev/null || echo "No wiki files to copy"
           
           # Create initial commit
           git add .
-          git commit -m "📚 Initialize Wiki with auto-generated content" || echo "No changes to commit"
+          git commit -m "📚 Initialize Wiki with content and presentation" || echo "No changes to commit"
           
           # Push to wiki repository
           git remote add origin https://${{ secrets.TEAM_SETUP_TOKEN }}@github.com/${{ github.repository }}.wiki.git
@@ -129,7 +139,7 @@ jobs:
           echo "⚠️ Wiki content directory not found"
         fi
         
-        echo "✅ Wiki setup complete"
+        echo "✅ Wiki setup with presentation complete"
         
     # ===============================
     # Step 4: Create ALL Issues (Smart Processing)
@@ -147,101 +157,7 @@ jobs:
         echo "✅ Smart issue creation completed!"
         
     # ===============================
-    # Step 5: Generate Slides for Wiki
-    # ===============================
-    - name: 📊 Generate Presentation Slides
-      run: |
-        echo "📊 Step 5: Generating presentation slides..."
-        
-        # Install Node.js is already available in ubuntu-latest
-        echo "📦 Installing Marp CLI..."
-        npm install -g @marp-team/marp-cli
-        
-        # Convert Markdown to HTML
-        echo "🔄 Converting presentation to HTML..."
-        mkdir -p .output
-        marp --html --pdf false --allow-local-files data/チーム開発説明資料.md -o .output/index.html
-        
-        # Also generate PDF (optional)
-        echo "📄 Generating PDF version..."
-        marp --pdf --allow-local-files data/チーム開発説明資料.md -o .output/チーム開発説明資料.pdf || echo "PDF generation skipped"
-        
-        echo "✅ Slides generation complete"
-    
-    - name: 📚 Add Slides to Wiki
-      env:
-        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
-        GITHUB_REPOSITORY: ${{ github.repository }}
-      run: |
-        echo "📚 Adding slides to Wiki..."
-        
-        # Clone or create wiki repository
-        WIKI_DIR="wiki_slides"
-        rm -rf $WIKI_DIR
-        
-        # Try to clone existing wiki
-        git clone "https://${{ secrets.TEAM_SETUP_TOKEN }}@github.com/${{ github.repository }}.wiki.git" $WIKI_DIR 2>/dev/null || {
-          echo "📝 Creating new wiki repository..."
-          mkdir -p $WIKI_DIR
-          cd $WIKI_DIR
-          git init
-          git config user.email "action@github.com"
-          git config user.name "GitHub Action"
-          cd ..
-        }
-        
-        # Configure git for the wiki repo
-        cd $WIKI_DIR
-        git config user.email "action@github.com"
-        git config user.name "GitHub Action"
-        
-        # Create slides directory in wiki
-        mkdir -p slides
-        cp -r ../.output/* slides/
-        
-        # Update or create Home page with slides links
-        cat > Home.md << 'EOF'
-        # チーム開発Wiki
-        
-        ## 📊 プレゼンテーション資料
-        
-        - [チーム開発説明資料（HTML）](slides/index.html)
-        - [チーム開発説明資料（PDF）](slides/チーム開発説明資料.pdf)
-        
-        ## 📚 プロジェクトドキュメント
-        
-        - [テーブル設計](Table-Design)
-        - [開発ルール](Development-Rules)
-        - [キックオフ](Kickoff)
-        
-        ## 🔗 関連リンク
-        
-        - [Issues](https://github.com/${{ github.repository }}/issues)
-        - [Projects](https://github.com/${{ github.repository }}/projects)
-        - [Discussions](https://github.com/${{ github.repository }}/discussions)
-        
-        ---
-        *最終更新: $(date '+%Y-%m-%d %H:%M:%S')*
-        EOF
-        
-        # Commit and push
-        git add .
-        git commit -m "📊 Add presentation slides - $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
-        
-        # Try to push to master first, then main
-        git push origin master 2>/dev/null || \
-        git push origin main 2>/dev/null || \
-        git push --set-upstream origin master 2>/dev/null || \
-        git push --set-upstream origin main 2>/dev/null || \
-        echo "Wiki push completed or skipped"
-        
-        cd ..
-        rm -rf $WIKI_DIR
-        
-        echo "✅ Wiki slides update complete"
-    
-    # ===============================
-    # Step 6: Final Summary
+    # Step 5: Final Summary
     # ===============================
     - name: 🎉 Display Final Summary
       run: |
