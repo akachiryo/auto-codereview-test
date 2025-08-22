@@ -1,0 +1,176 @@
+---
+marp: true
+theme: gaia
+paginate: true
+backgroundColor: #fff
+style: |
+  section {
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+  h1 {
+    color: #2E86AB;
+  }
+  h2 {
+    color: #A23B72;
+  }
+  .columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+---
+
+<!-- _class: lead -->
+
+# PRUMアカデミー
+## チーム開発キックオフ
+
+---
+
+# アジェンダ
+
+1. **目的**
+2. **スケジュール**
+3. **概要説明**
+4. **ルール**
+5. **評価**
+6. **リーダー決め**
+7. **その他ツール・リンク**
+
+---
+
+# 目的
+
+## 🎯 チーム開発の3つの目標
+
+### 1️⃣ 可能な限り実務に近い環境で経験を積む
+### 2️⃣ 自走できるエンジニアになる
+### 3️⃣ フルスタックエンジニアへの第一歩
+
+---
+
+# 開発スケジュール
+
+## 期間：3ヶ月/1プロダクト
+
+| 週 | やること |
+|:---:|:---|
+| **1-2W** | 見積もり・環境構築 |
+| **3-4W** | 開発 |
+| **5-6W** | テスト |
+| **7-8W** | 中間評価・開発継続 |
+
+---
+
+# 1週間スケジュール
+
+## スプリント：15時間
+
+| 曜日 | 活動内容 |
+|:---:|:---|
+| **月** | 週次MTG / KPTA / タスク割り振り |
+| **火〜金** | 作業 |
+| **土** | 本社に集合し一緒に作業 |
+
+---
+
+# プロダクト説明
+
+<div class="columns">
+
+<div>
+
+## 🌍 イマココSNS
+
+- TwitterライクなUI
+- 投稿時に現在地も自動投稿
+- **要件・ユーザーストーリー**: チームごとのリンク
+- **DB定義書**: チームごとのリンク
+- **プロジェクトベース**:
+  - Rails: [imakoko-base](https://github.com/prum-jp/imakoko-base)
+  - Java: [springboot-base](https://github.com/prum-jp/academy-springboot-base)
+
+</div>
+
+<div>
+
+## 🏠 不動産検索サイト
+
+- よくある不動産サイトUI
+- いろんな条件で検索できる
+- **要件・ユーザーストーリー**: チームごとのリンク
+- **DB定義書**: チームごとのリンク
+
+</div>
+
+</div>
+
+---
+
+# 成果物
+
+| 成果物 | 内容 |
+|:---|:---|
+| **ソースコード** | Github URLで提出 |
+| **KPTA** | フォーマットに沿って週次定例にて作成・提出 |
+| **テスト仕様書** | フォーマットに沿って作成・提出 |
+| **テーブル定義書** | 更新して提出（変更あれば） |
+
+### 📚 参考資料
+- [KPTについて](https://service.shiftinc.jp/column/8223/)
+- [テスト仕様書の書き方](https://service.valtes.co.jp/s-test/blog/testspecification_vol38/)
+- [テスト設計](https://qiita.com/jun2014/items/cad7328978e709fe79f4)
+
+---
+
+# ルールと評価
+
+## 📋 基本的なルール
+
+- 業務外ではあるが、やると決めたらやりましょう
+- 1週間で15時間を目安に取り組みましょう
+- 基本的にはチーム内で相談し合って解決しましょう
+- 質問は、まずはチーム内で解決（どうしてもわからなければ、メンターを頼りましょう）
+- 連絡はできるだけ早いレスポンスを心がけましょう
+- 最低1日1回はslackを確認するようにしましょう
+- チームとしても、個人としてもそれぞれで評価をします
+- 仕様は勝手に判断しない（メンターに確認する）
+
+---
+
+# リーダー決め
+
+## 👨‍💼 リーダーの役割
+- メンターへの報告
+- もろもろの調整
+
+## 👥 リーダー以外のメンバー
+- リーダーを支える
+- 任せっぱなしにしない
+- 積極的に参加する
+
+---
+
+# 評価基準
+
+## ✅ チェックポイント
+
+- 期限延長依頼は、期限前に理由を添えて、できていますか？
+- 週報は必ず月曜日までに提出できていますか？
+- slackの返信は、スレッドにできていますか？
+
+### 📊 評価シート
+[評価シート](https://docs.google.com/spreadsheets/d/1tUJnC6bELIBAcIa5otKg433iJX7s6mvnOMQCigaCxkM/edit#gid=0)
+
+---
+
+# その他ツール・リンク
+
+## 🔧 開発ツール
+
+### KPT
+- [Trello Board](https://trello.com/b/b6HiEUBQ/6thkpt)
+
+### プロジェクトベース
+- Rails: [rails-base](https://github.com/prum-jp/rails-base)
+- Java: [academy-springboot-base](https://github.com/prum-jp/academy-springboot-base)

@@ -5,10 +5,11 @@ on:
   workflow_call:      # 他のワークフローから呼び出し可能
   push:
     paths:
-      - 'data/チーム開発説明資料.md'  # スライドファイルが更新された時
+      - 'slides.md'  # スライドファイルが更新された時
+      - 'data/チーム開発説明資料.md'  # 日本語版が更新された時
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -24,17 +25,38 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Generate slides with Marp
-        uses: marp-team/marp-action@v3
-        with:
-          dir: data
-          output: docs
-          filename: index.html
-          theme: gaia
-          # PDFも同時生成
-          pdf: true
-          # HTMLとPDFの両方を生成
-          args: '--allow-local-files --html'
+      - name: Setup Marp CLI
+        run: |
+          npm install -g @marp-team/marp-cli
+          
+      - name: Create output directory
+        run: |
+          mkdir -p ./dist
+          
+      - name: Generate slides
+        run: |
+          # ファイルの存在確認
+          echo "Checking files..."
+          ls -la ./
+          
+          # 英語名ファイルを使用（rootディレクトリ）
+          echo "Generating HTML slides from slides.md..."
+          marp slides.md \
+            --html \
+            --theme gaia \
+            --allow-local-files \
+            -o ./dist/index.html
+          
+          # PDF版も生成
+          echo "Generating PDF..."
+          marp slides.md \
+            --pdf \
+            --allow-local-files \
+            -o ./dist/slides.pdf || echo "PDF generation skipped"
+          
+          # 生成結果確認
+          echo "Generated files:"
+          ls -la ./dist/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -42,7 +64,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs
+          path: ./dist
 
   deploy:
     environment:
