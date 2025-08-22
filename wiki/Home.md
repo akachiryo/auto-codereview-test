@@ -4,7 +4,12 @@
 
 ## 📊 プレゼンテーション資料
 
-- [[Team-Development-Presentation|チーム開発説明資料]] - プロジェクトキックオフ資料
+### スライド形式で閲覧
+- [🎯 **チーム開発説明資料（スライド）**](https://akachiryo.github.io/auto-codereview-test) - インタラクティブなスライド形式
+- [📄 **PDF版**](https://akachiryo.github.io/auto-codereview-test/slides.pdf) - ダウンロード可能なPDF
+
+### テキスト形式で閲覧
+- [[Team-Development-Presentation|チーム開発説明資料（テキスト）]] - Wikiページ形式
 
 ## 📋 ドキュメント一覧
 
@@ -14,10 +19,10 @@
 
 ## 🔗 関連リンク
 
-- [GitHub リポジトリ](https://github.com/test/repo)
-- [Issues](https://github.com/test/repo/issues)
-- [Projects](https://github.com/test/repo/projects)
-- [Discussions](https://github.com/test/repo/discussions)
+- [GitHub リポジトリ](https://github.com/akachiryo/auto-codereview-test)
+- [Issues](https://github.com/akachiryo/auto-codereview-test/issues)
+- [Projects](https://github.com/akachiryo/auto-codereview-test/projects)
+- [Discussions](https://github.com/akachiryo/auto-codereview-test/discussions)
 
 ## 📝 参考資料
 
@@ -27,4 +32,4 @@
 ---
 
 *このWikiは GitHub Actions により自動生成されています*  
-*最終更新: 2025-08-22 13:34:46*
+*最終更新: 2025-08-22 16:34:35*

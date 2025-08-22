@@ -85,7 +85,10 @@ def generate_wiki_content(wiki_path: str = 'wiki'):
         print(f"📂 Wiki directory created/verified: {wiki_path}")
         
         # 1. HOMEページ (プレゼンテーション対応)
-        repo_url = f"https://{GITHUB_REPOSITORY.split('/')[0]}.github.io/{GITHUB_REPOSITORY.split('/')[1]}"
+        owner = GITHUB_REPOSITORY.split('/')[0]
+        repo_name = GITHUB_REPOSITORY.split('/')[1]
+        repo_url = f"https://{owner}.github.io/{repo_name}"
+        
         home_content = f"""# イマココSNS Wiki
 
 イマココSNS開発プロジェクトのWikiページです。
@@ -94,7 +97,7 @@ def generate_wiki_content(wiki_path: str = 'wiki'):
 
 ### スライド形式で閲覧
 - [🎯 **チーム開発説明資料（スライド）**]({repo_url}) - インタラクティブなスライド形式
-- [📄 **PDF版**]({repo_url}/チーム開発説明資料.pdf) - ダウンロード可能なPDF
+- [📄 **PDF版**]({repo_url}/slides.pdf) - ダウンロード可能なPDF
 
 ### テキスト形式で閲覧
 - [[Team-Development-Presentation|チーム開発説明資料（テキスト）]] - Wikiページ形式
