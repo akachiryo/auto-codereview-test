@@ -89,6 +89,15 @@ def generate_wiki_content(wiki_path: str = 'wiki'):
         repo_name = GITHUB_REPOSITORY.split('/')[1]
         repo_url = f"https://{owner}.github.io/{repo_name}"
         
+        # リンクを安全に構築
+        slide_link = f"[🎯 **チーム開発説明資料（スライド）**]({repo_url})"
+        pdf_link = f"[📄 **PDF版**]({repo_url}/slides.pdf)"
+        github_repo_link = f"[GitHub リポジトリ](https://github.com/{GITHUB_REPOSITORY})"
+        issues_link = f"[Issues](https://github.com/{GITHUB_REPOSITORY}/issues)"
+        projects_link = f"[Projects](https://github.com/{GITHUB_REPOSITORY}/projects)"
+        discussions_link = f"[Discussions](https://github.com/{GITHUB_REPOSITORY}/discussions)"
+        timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+        
         home_content = f"""# イマココSNS Wiki
 
 イマココSNS開発プロジェクトのWikiページです。
@@ -96,8 +105,8 @@ def generate_wiki_content(wiki_path: str = 'wiki'):
 ## 📊 プレゼンテーション資料
 
 ### スライド形式で閲覧
-- [🎯 **チーム開発説明資料（スライド）**]({repo_url}) - インタラクティブなスライド形式
-- [📄 **PDF版**]({repo_url}/slides.pdf) - ダウンロード可能なPDF
+- {slide_link} - インタラクティブなスライド形式
+- {pdf_link} - ダウンロード可能なPDF
 
 ### テキスト形式で閲覧
 - [[Team-Development-Presentation|チーム開発説明資料（テキスト）]] - Wikiページ形式
@@ -110,10 +119,10 @@ def generate_wiki_content(wiki_path: str = 'wiki'):
 
 ## 🔗 関連リンク
 
-- [GitHub リポジトリ](https://github.com/{GITHUB_REPOSITORY})
-- [Issues](https://github.com/{GITHUB_REPOSITORY}/issues)
-- [Projects](https://github.com/{GITHUB_REPOSITORY}/projects)
-- [Discussions](https://github.com/{GITHUB_REPOSITORY}/discussions)
+- {github_repo_link}
+- {issues_link}
+- {projects_link}
+- {discussions_link}
 
 ## 📝 参考資料
 
@@ -123,7 +132,7 @@ def generate_wiki_content(wiki_path: str = 'wiki'):
 ---
 
 *このWikiは GitHub Actions により自動生成されています*  
-*最終更新: {time.strftime('%Y-%m-%d %H:%M:%S')}*
+*最終更新: {timestamp}*
 """
         
         # 2. テーブル設計書
