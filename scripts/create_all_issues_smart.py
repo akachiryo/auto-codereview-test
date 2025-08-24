@@ -57,7 +57,7 @@ def get_session():
         thread_local.session.headers.update(REST_HEADERS)
     return thread_local.session
 
-def load_all_csv_data() -> Tuple[List[Dict], List[Dict]]:
+def load_all_csv_data() -> Tuple[List[Dict], List[Dict], List[Dict]]:
     """全てのCSVデータを読み込み"""
     print("📊 Loading all CSV data...")
     
@@ -77,8 +77,16 @@ def load_all_csv_data() -> Tuple[List[Dict], List[Dict]]:
             reader = csv.DictReader(f)
             test_issues = [row for row in reader if row.get('title', '').strip()]
     
-    print(f"📋 Loaded: {len(task_issues)} task issues, {len(test_issues)} test issues")
-    print(f"📊 Total: {len(task_issues) + len(test_issues)} issues to create")
+    # KPTIssues
+    kpt_issues = []
+    kpt_csv_path = 'data/kpt_for_issues.csv'
+    if os.path.exists(kpt_csv_path):
+        with open(kpt_csv_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            kpt_issues = [row for row in reader if row.get('title', '').strip()]
+    
+    print(f"📋 Loaded: {len(task_issues)} task issues, {len(test_issues)} test issues, {len(kpt_issues)} KPT issues")
+    print(f"📊 Total: {len(task_issues) + len(test_issues) + len(kpt_issues)} issues to create")
     
     # デバッグ: 最初の数件のdifficultyを確認
     if task_issues:
@@ -93,7 +101,7 @@ def load_all_csv_data() -> Tuple[List[Dict], List[Dict]]:
             difficulties[diff] = difficulties.get(diff, 0) + 1
         print(f"🔍 Debug: Difficulty distribution: {difficulties}")
     
-    return task_issues, test_issues
+    return task_issues, test_issues, kpt_issues
 
 def calculate_batches(total_count: int, batch_size: int) -> int:
     """必要なバッチ数を計算"""
@@ -124,8 +132,10 @@ def create_single_issue(issue_data: Dict, index: int, total: int, issue_type: st
                 return issue
             
             elif response.status_code == 403:
-                print(f"  ⏳ Rate limit hit ({index + 1}/{total}) [attempt {attempt + 1}]...")
-                time.sleep(RETRY_DELAY * (attempt + 1))  # 指数バックオフ
+                # 指数バックオフ
+                backoff_time = RETRY_DELAY * (2 ** attempt)
+                print(f"  ⏳ Rate limit hit ({index + 1}/{total}) [attempt {attempt + 1}], waiting {backoff_time}s...")
+                time.sleep(backoff_time)
                 continue
                 
             elif response.status_code >= 500:
@@ -170,233 +180,7 @@ def create_issues_batch(issues_data: List[Tuple], batch_num: int, total_batches:
     print(f"📊 Batch {batch_num} result: {len(created_issues)}/{len(issues_data)} issues created, {len(failed_issues)} failed")
     return created_issues, failed_issues
 
-def set_project_field_value_by_name(project_id: str, item_id: str, field_name: str, option_name: str) -> bool:
-    """プロジェクトアイテムのカスタムフィールド値をフィールド名で設定"""
-    print(f"    🔧 Setting field '{field_name}' to '{option_name}'")
-    
-    # フィールド情報とオプションIDを取得
-    get_field_query = """
-    query($projectId: ID!) {
-        node(id: $projectId) {
-            ... on ProjectV2 {
-                fields(first: 20) {
-                    nodes {
-                        ... on ProjectV2SingleSelectField {
-                            id
-                            name
-                            options {
-                                id
-                                name
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    """
-    
-    variables = {'projectId': project_id}
-    
-    try:
-        payload = {'query': get_field_query, 'variables': variables}
-        response = requests.post(GRAPHQL_URL, json=payload, headers=GRAPHQL_HEADERS, timeout=30)
-        
-        if response.status_code != 200:
-            print(f"    ❌ Failed to get field info: HTTP {response.status_code}")
-            return False
-            
-        data = response.json()
-        if 'errors' in data:
-            print(f"    ❌ GraphQL errors: {data['errors']}")
-            return False
-            
-        if 'data' not in data or not data['data'] or not data['data']['node']:
-            print(f"    ❌ No data returned")
-            return False
-            
-        # 対象フィールドとオプションを探す
-        field_id = None
-        option_id = None
-        
-        for field in data['data']['node']['fields']['nodes']:
-            if field.get('name') == field_name:
-                field_id = field['id']
-                print(f"    ✅ Found field '{field_name}' with ID: {field_id}")
-                print(f"    🔍 Available options: {[opt['name'] for opt in field.get('options', [])]}")
-                
-                for option in field.get('options', []):
-                    if option['name'] == option_name:
-                        option_id = option['id']
-                        print(f"    ✅ Found option '{option_name}' with ID: {option_id}")
-                        break
-                break
-        
-        if not field_id:
-            print(f"    ❌ Field '{field_name}' not found")
-            return False
-            
-        if not option_id:
-            print(f"    ❌ Option '{option_name}' not found in field '{field_name}'")
-            return False
-        
-        # フィールド値を設定
-        update_query = """
-        mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: ProjectV2FieldValue!) {
-            updateProjectV2ItemFieldValue(input: {
-                projectId: $projectId,
-                itemId: $itemId,
-                fieldId: $fieldId,
-                value: $value
-            }) {
-                projectV2Item { 
-                    id 
-                }
-            }
-        }
-        """
-        
-        update_variables = {
-            'projectId': project_id,
-            'itemId': item_id,
-            'fieldId': field_id,
-            'value': {
-                'singleSelectOptionId': option_id
-            }
-        }
-        
-        update_payload = {'query': update_query, 'variables': update_variables}
-        update_response = requests.post(GRAPHQL_URL, json=update_payload, headers=GRAPHQL_HEADERS, timeout=30)
-        
-        if update_response.status_code == 200:
-            update_data = update_response.json()
-            if 'errors' not in update_data and 'data' in update_data:
-                print(f"    ✅ Successfully set field value")
-                return True
-            else:
-                print(f"    ❌ Update failed: {update_data.get('errors', 'Unknown error')}")
-        else:
-            print(f"    ❌ Update request failed: HTTP {update_response.status_code}")
-        
-        return False
-        
-    except Exception as e:
-        print(f"    ❌ Exception setting field value: {str(e)}")
-        return False
-
-def set_project_field_value(project_id: str, item_id: str, field_id: str, option_name: str) -> bool:
-    """プロジェクトアイテムのカスタムフィールド値を設定"""
-    print(f"    🔧 Attempting to set field value: {option_name}")
-    # まずフィールドのオプションIDを取得
-    get_field_query = """
-    query($projectId: ID!) {
-        node(id: $projectId) {
-            ... on ProjectV2 {
-                fields(first: 20) {
-                    nodes {
-                        ... on ProjectV2SingleSelectField {
-                            id
-                            name
-                            options {
-                                id
-                                name
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    """
-    
-    variables = {'projectId': project_id}
-    
-    try:
-        payload = {'query': get_field_query, 'variables': variables}
-        response = requests.post(GRAPHQL_URL, json=payload, headers=GRAPHQL_HEADERS, timeout=30)
-        
-        if response.status_code != 200:
-            return False
-            
-        data = response.json()
-        if 'errors' in data or 'data' not in data:
-            return False
-            
-        # 難易度フィールドと対象オプションを探す
-        option_id = None
-        difficulty_field_found = False
-        
-        for field in data['data']['node']['fields']['nodes']:
-            if field.get('name') == 'Difficulty':
-                difficulty_field_found = True
-                print(f"    🔍 Found Difficulty field with options: {[opt['name'] for opt in field.get('options', [])]}")
-                for option in field.get('options', []):
-                    if option['name'] == option_name:
-                        option_id = option['id']
-                        print(f"    ✅ Found matching option: {option_name} -> {option_id}")
-                        break
-                break
-        
-        if not difficulty_field_found:
-            print(f"    ❌ Difficulty field not found in project")
-            return False
-            
-        if not option_id:
-            print(f"    ❌ Option '{option_name}' not found in Difficulty field")
-            return False
-        
-        # フィールド値を設定
-        update_query = """
-        mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: ProjectV2FieldValue!) {
-            updateProjectV2ItemFieldValue(input: {
-                projectId: $projectId,
-                itemId: $itemId,
-                fieldId: $fieldId,
-                value: $value
-            }) {
-                projectV2Item { id }
-            }
-        }
-        """
-        
-        update_variables = {
-            'projectId': project_id,
-            'itemId': item_id,
-            'fieldId': field_id,
-            'value': {
-                'singleSelectOptionId': option_id
-            }
-        }
-        
-        update_payload = {'query': update_query, 'variables': update_variables}
-        update_response = requests.post(GRAPHQL_URL, json=update_payload, headers=GRAPHQL_HEADERS, timeout=30)
-        
-        if update_response.status_code == 200:
-            update_data = update_response.json()
-            return 'errors' not in update_data and 'data' in update_data
-        return False
-        
-    except Exception as e:
-        print(f"    ⚠️ Field update error: {str(e)}")
-        return False
-
-def load_difficulty_field_info() -> Optional[Tuple[str, str, str]]:
-    """難易度フィールド情報を読み込み"""
-    try:
-        with open('difficulty_field.txt', 'r', encoding='utf-8') as f:
-            line = f.read().strip()
-            print(f"    🔍 Read difficulty_field.txt: {line}")
-            if ':' in line:
-                parts = line.split(':')
-                if len(parts) >= 3:
-                    result = parts[0], parts[1], parts[2]  # title, project_id, field_id
-                    print(f"    🔍 Parsed difficulty info: {result}")
-                    return result
-        print(f"    ⚠️ difficulty_field.txt exists but format is invalid")
-        return None
-    except FileNotFoundError:
-        print(f"    ⚠️ difficulty_field.txt not found")
-        return None
+# Custom field functions removed - using labels instead
 
 def add_issue_to_project_fast(project_id: str, issue: Dict) -> Optional[str]:
     """高速でIssueをProjectに追加し、アイテムIDを返す"""
@@ -431,7 +215,7 @@ def add_issue_to_project_fast(project_id: str, issue: Dict) -> Optional[str]:
     except:
         return None
 
-def link_issues_to_projects(task_issues: List[Dict], test_issues: List[Dict], project_ids: Dict[str, str]):
+def link_issues_to_projects(task_issues: List[Dict], test_issues: List[Dict], kpt_issues: List[Dict], project_ids: Dict[str, str]):
     """IssueをProjectsにリンク"""
     print("\n🔗 Linking issues to projects...")
     
@@ -442,38 +226,11 @@ def link_issues_to_projects(task_issues: List[Dict], test_issues: List[Dict], pr
         print(f"  📌 Linking {len(issues)} {issue_type} issues to {project_name}")
         success_count = 0
         
-        # 難易度フィールド情報を読み込み
-        difficulty_info = load_difficulty_field_info()
-        field_set_count = 0
-        
-        if issue_type == 'task':
-            print(f"    🔍 Debug: difficulty_info = {difficulty_info}")
-            print(f"    🔍 Debug: project_name = {project_name}")
-            print(f"    🔍 Debug: project_id = {project_id}")
-        
         for i, issue in enumerate(issues):
             try:
                 item_id = add_issue_to_project_fast(project_id, issue)
                 if item_id:
                     success_count += 1
-                    
-                    # タスクの場合、難易度フィールドを設定
-                    if issue_type == 'task':
-                        print(f"    🔍 Debug: issue difficulty = {issue.get('difficulty')}")
-                        
-                        if (difficulty_info and 'タスク' in project_name and issue.get('difficulty')):
-                            _, task_project_id, stored_field_id = difficulty_info
-                            print(f"    🔍 Debug: Attempting to set field. project_id match: {project_id == task_project_id}")
-                            
-                            if project_id == task_project_id:
-                                # フィールドIDは使わず、フィールド名でダイナミックに検索
-                                if set_project_field_value_by_name(project_id, item_id, 'Difficulty', issue['difficulty']):
-                                    field_set_count += 1
-                                    print(f"    ✅ Set difficulty '{issue['difficulty']}' for issue {issue.get('title', 'Unknown')}")
-                                else:
-                                    print(f"    ❌ Failed to set difficulty for issue {issue.get('title', 'Unknown')}")
-                        else:
-                            print(f"    ⚠️ Skipping difficulty set: difficulty_info={bool(difficulty_info)}, has_タスク={'タスク' in project_name}, has_difficulty={bool(issue.get('difficulty'))}")
                 
                 if (i + 1) % 20 == 0:
                     print(f"    ✅ Linked {i + 1}/{len(issues)} to {project_name}")
@@ -482,8 +239,6 @@ def link_issues_to_projects(task_issues: List[Dict], test_issues: List[Dict], pr
             time.sleep(0.1)  # プロジェクトリンクも少し間隔を空ける
         
         print(f"  📊 {project_name}: {success_count}/{len(issues)} issues linked")
-        if issue_type == 'task' and field_set_count > 0:
-            print(f"  🏷️ {project_name}: {field_set_count}/{success_count} difficulty fields set")
         return success_count
     
     # プロジェクトにリンク
@@ -501,7 +256,14 @@ def link_issues_to_projects(task_issues: List[Dict], test_issues: List[Dict], pr
         'test'
     )
     
-    return task_linked, test_linked
+    kpt_linked = link_batch(
+        kpt_issues,
+        project_ids.get('イマココSNS（KPT）'),
+        'イマココSNS（KPT）',
+        'kpt'
+    )
+    
+    return task_linked, test_linked, kpt_linked
 
 def load_project_ids() -> Dict[str, str]:
     """保存されたプロジェクトIDを読み込み"""
@@ -521,7 +283,12 @@ def load_project_ids() -> Dict[str, str]:
 def prepare_issue_data(issues: List[Dict], labels: List[str]) -> List[Tuple[Dict, str]]:
     """Issue作成用のデータを準備（番号付きタイトル）"""
     issue_requests = []
-    issue_type = 'task' if 'task' in labels else 'test'
+    if 'task' in labels:
+        issue_type = 'task'
+    elif 'test' in labels:
+        issue_type = 'test'
+    else:
+        issue_type = 'kpt'
     
     for index, row in enumerate(issues, 1):
         title = row.get('title', '').strip()
@@ -544,7 +311,7 @@ def prepare_issue_data(issues: List[Dict], labels: List[str]) -> List[Tuple[Dict
                 numbered_title = f"タスク{index:03d}: {clean_title}"
             else:
                 numbered_title = f"タスク{index:03d}: {title}"
-        else:
+        elif issue_type == 'test':
             # 「テスト」で始まる場合は、番号を置き換え
             if title.startswith('テスト'):
                 import re
@@ -556,18 +323,29 @@ def prepare_issue_data(issues: List[Dict], labels: List[str]) -> List[Tuple[Dict
                 numbered_title = f"テスト{index:03d}: {clean_title}"
             else:
                 numbered_title = f"テスト{index:03d}: {title}"
+        else:  # KPT issues
+            # KPT issuesは既に適切な番号付けがされているのでそのまま使用
+            numbered_title = title
             
         existing_labels = [label.strip() for label in row.get('labels', '').split(',') if label.strip()]
-        all_labels = list(set(existing_labels + labels))
         
-        # 難易度情報を取得（タスクのみ）
-        difficulty = row.get('difficulty', '').strip() if issue_type == 'task' else None
+        # タスクの場合は難易度をラベルとして使用、それ以外は従来通り
+        if issue_type == 'task':
+            difficulty = row.get('difficulty', '').strip()
+            if difficulty:
+                # 難易度をメインラベルとして使用
+                all_labels = list(set(existing_labels + [difficulty]))
+            else:
+                # 難易度が設定されていない場合はCSVのラベルのみ
+                all_labels = existing_labels
+        else:
+            # テストやKPTの場合は従来通り
+            all_labels = list(set(existing_labels + labels))
         
         issue_data = {
             'title': numbered_title,
             'body': body,
-            'labels': all_labels,
-            'difficulty': difficulty
+            'labels': all_labels
         }
         
         issue_requests.append((issue_data, issue_type))
@@ -637,8 +415,8 @@ def main():
     
     try:
         # データ読み込み
-        task_data, test_data = load_all_csv_data()
-        total_issues = len(task_data) + len(test_data)
+        task_data, test_data, kpt_data = load_all_csv_data()
+        total_issues = len(task_data) + len(test_data) + len(kpt_data)
         
         if total_issues == 0:
             print("⚠️ No issues found in CSV files")
@@ -655,9 +433,10 @@ def main():
         project_ids = load_project_ids()
         
         # Issue作成用データ準備
-        task_requests = prepare_issue_data(task_data, ['task', 'development'])
+        task_requests = prepare_issue_data(task_data, [])  # 難易度をラベルとして使用
         test_requests = prepare_issue_data(test_data, ['test', 'qa'])
-        all_requests = task_requests + test_requests
+        kpt_requests = prepare_issue_data(kpt_data, ['kpt', 'retrospective'])
+        all_requests = task_requests + test_requests + kpt_requests
         
         print(f"\n📋 Prepared requests: {len(all_requests)} issues")
         
@@ -665,6 +444,7 @@ def main():
         all_created_issues = []
         task_created = []
         test_created = []
+        kpt_created = []
         
         for batch_num in range(total_batches):
             start_idx = batch_num * BATCH_SIZE
@@ -683,18 +463,20 @@ def main():
                     all_failed_issues = []
                 all_failed_issues.extend(batch_failed)
             
-            # タスク/テスト別に分類
+            # タスク/テスト/KPT別に分類
             for issue in batch_created:
                 issue_labels = [label['name'] for label in issue.get('labels', [])]
                 if 'task' in issue_labels:
                     task_created.append(issue)
+                elif 'kpt' in issue_labels:
+                    kpt_created.append(issue)
                 else:
                     test_created.append(issue)
             
-            # バッチ間の休憩
+            # バッチ間の休憩（長めに）
             if batch_num < total_batches - 1:
                 print(f"  ⏳ Batch pause...")
-                time.sleep(2)
+                time.sleep(15)  # 15秒に増加
         
         # 失敗したもののリトライ
         retry_created = []
@@ -707,11 +489,13 @@ def main():
                 issue_labels = [label['name'] for label in issue.get('labels', [])]
                 if 'task' in issue_labels:
                     task_created.append(issue)
+                elif 'kpt' in issue_labels:
+                    kpt_created.append(issue)
                 else:
                     test_created.append(issue)
         
         # プロジェクトリンク
-        task_linked, test_linked = link_issues_to_projects(task_created, test_created, project_ids)
+        task_linked, test_linked, kpt_linked = link_issues_to_projects(task_created, test_created, kpt_created, project_ids)
         
         # 結果サマリー
         end_time = time.time()
@@ -723,11 +507,13 @@ def main():
         print(f"📊 Results:")
         print(f"  • Task issues created: {len(task_created)}")
         print(f"  • Test issues created: {len(test_created)}")
+        print(f"  • KPT issues created: {len(kpt_created)}")
         print(f"  • Total issues created: {len(all_created_issues)}")
         if retry_created:
             print(f"  • Retry issues created: {len(retry_created)}")
         print(f"  • Task issues linked: {task_linked}")
         print(f"  • Test issues linked: {test_linked}")
+        print(f"  • KPT issues linked: {kpt_linked}")
         final_failed = len(all_failed_issues) - len(retry_created) if 'all_failed_issues' in locals() else 0
         if final_failed > 0:
             print(f"  • Final failed issues: {final_failed}")
@@ -742,6 +528,7 @@ def main():
             f.write(f"Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
             f.write(f"Task issues: {len(task_created)}\n")
             f.write(f"Test issues: {len(test_created)}\n")
+            f.write(f"KPT issues: {len(kpt_created)}\n")
             f.write(f"Total: {len(all_created_issues)}\n")
             if retry_created:
                 f.write(f"Retry issues: {len(retry_created)}\n")

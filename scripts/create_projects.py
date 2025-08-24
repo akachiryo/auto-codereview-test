@@ -176,7 +176,7 @@ def main():
     projects = [
         "イマココSNS（タスク）",
         "イマココSNS（テスト）", 
-        "イマココSNS（KPTA）"
+        "イマココSNS（KPT）"
     ]
     
     created_projects = {}
