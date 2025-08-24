@@ -280,15 +280,9 @@ def load_project_ids() -> Dict[str, str]:
     
     return project_ids
 
-def prepare_issue_data(issues: List[Dict], labels: List[str]) -> List[Tuple[Dict, str]]:
+def prepare_issue_data(issues: List[Dict], labels: List[str], issue_type: str) -> List[Tuple[Dict, str]]:
     """Issue作成用のデータを準備（番号付きタイトル）"""
     issue_requests = []
-    if 'task' in labels:
-        issue_type = 'task'
-    elif 'test' in labels:
-        issue_type = 'test'
-    else:
-        issue_type = 'kpt'
     
     for index, row in enumerate(issues, 1):
         title = row.get('title', '').strip()
@@ -433,9 +427,9 @@ def main():
         project_ids = load_project_ids()
         
         # Issue作成用データ準備
-        task_requests = prepare_issue_data(task_data, [])  # 難易度をラベルとして使用
-        test_requests = prepare_issue_data(test_data, ['test', 'qa'])
-        kpt_requests = prepare_issue_data(kpt_data, ['kpt', 'retrospective'])
+        task_requests = prepare_issue_data(task_data, [], 'task')  # 難易度をラベルとして使用
+        test_requests = prepare_issue_data(test_data, ['test', 'qa'], 'test')
+        kpt_requests = prepare_issue_data(kpt_data, ['kpt', 'retrospective'], 'kpt')
         all_requests = task_requests + test_requests + kpt_requests
         
         print(f"\n📋 Prepared requests: {len(all_requests)} issues")
