@@ -72,6 +72,58 @@ def get_repository_info() -> Optional[Dict]:
         }
     return None
 
+def create_custom_field(project_id: str, field_name: str, options: List[str]) -> Optional[str]:
+    """プロジェクトにカスタムフィールドを作成"""
+    # API Reference: https://docs.github.com/en/graphql/reference/mutations#createprojectv2field
+    query = """
+    mutation($projectId: ID!, $name: String!, $dataType: ProjectV2CustomFieldType!, $options: [ProjectV2SingleSelectFieldOptionInput!]) {
+        createProjectV2Field(input: {
+            projectId: $projectId,
+            name: $name,
+            dataType: $dataType,
+            singleSelectOptions: $options
+        }) {
+            projectV2Field {
+                ... on ProjectV2SingleSelectField {
+                    id
+                    name
+                    options {
+                        id
+                        name
+                    }
+                }
+            }
+        }
+    }
+    """
+    
+    # オプションを作成
+    field_options = []
+    for option in options:
+        field_options.append({
+            "name": option,
+            "color": "GRAY",  # デフォルトカラー
+            "description": ""
+        })
+    
+    variables = {
+        'projectId': project_id,
+        'name': field_name,
+        'dataType': 'SINGLE_SELECT',
+        'options': field_options
+    }
+    
+    result = graphql_request(query, variables)
+    if result and 'createProjectV2Field' in result:
+        field = result['createProjectV2Field']['projectV2Field']
+        print(f"✅ Created custom field: {field['name']}")
+        for option in field.get('options', []):
+            print(f"  • {option['name']} (ID: {option['id']})")
+        return field['id']
+    else:
+        print(f"❌ Failed to create custom field: {field_name}")
+        return None
+
 def create_project(title: str, repo_info: Dict) -> Optional[str]:
     """プロジェクトを作成"""
     # API Reference: https://docs.github.com/en/graphql/reference/mutations#createprojectv2
@@ -133,6 +185,17 @@ def main():
         project_id = create_project(project_title, repo_info)
         if project_id:
             created_projects[project_title] = project_id
+            
+            # "タスク" プロジェクトにのみ難易度フィールドを追加
+            if "タスク" in project_title:
+                print(f"\n📝 Adding custom field to: {project_title}")
+                difficulty_options = ["Required", "Optional", "Challenge"]
+                field_id = create_custom_field(project_id, "Difficulty", difficulty_options)
+                
+                if field_id:
+                    # フィールドIDも保存（後で使用）
+                    with open('difficulty_field.txt', 'w', encoding='utf-8') as f:
+                        f.write(f"{project_title}:{project_id}:{field_id}")
         
         # Rate limit対策
         time.sleep(2)
