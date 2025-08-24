@@ -10,22 +10,29 @@ import requests
 import csv
 import time
 import sys
+import math
+import datetime
+import random
 from typing import Dict, List, Optional, Tuple
 # from concurrent.futures import ThreadPoolExecutor, as_completed  # 並列処理無効化
 import threading
-import math
 
 # 環境変数から設定を取得
 TEAM_SETUP_TOKEN = os.environ.get('TEAM_SETUP_TOKEN')
 GITHUB_REPOSITORY = os.environ.get('GITHUB_REPOSITORY')
 
-# 動的設定
+# GitHub公式レート制限対応設定
+# 参考: https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api
+# - Primary: 5,000 requests/hour (authenticated)
+# - Secondary: 80 content-creating requests/minute
+# - Recommendation: 1 second minimum between content-creating requests
 PARALLEL_WORKERS = 1     # 順番保持のためシーケンシャル処理
-REQUEST_DELAY = 0.5      # レート制限回避のためのディレイ
-BATCH_SIZE = 30          # バッチサイズ
-BURST_LIMIT = 10         # バーストリミット
-RETRY_DELAY = 2.0        # リトライ間隔
-MAX_RETRIES = 3          # 最大リトライ回数
+REQUEST_DELAY = 1.0      # 1秒間隔（GitHub推奨最小値）
+BATCH_SIZE = 10          # バッチサイズ（10件ずつ処理）
+BATCH_PAUSE = 15.0       # バッチ間の休憩（15秒）
+RETRY_DELAY = 120.0      # リトライ間隔（2分）
+MAX_RETRIES = 15         # 最大リトライ回数
+SECONDARY_LIMIT_DELAY = 300.0  # セカンダリ制限時の待機時間（5分）
 
 if not TEAM_SETUP_TOKEN or not GITHUB_REPOSITORY:
     raise ValueError("TEAM_SETUP_TOKEN and GITHUB_REPOSITORY environment variables are required")
@@ -56,6 +63,31 @@ def get_session():
         thread_local.session = requests.Session()
         thread_local.session.headers.update(REST_HEADERS)
     return thread_local.session
+
+def check_rate_limit_headers(response):
+    """レート制限ヘッダーをチェックし、情報を表示"""
+    headers = response.headers
+    remaining = headers.get('x-ratelimit-remaining')
+    limit = headers.get('x-ratelimit-limit') 
+    reset_timestamp = headers.get('x-ratelimit-reset')
+    
+    if remaining and limit:
+        remaining_pct = (int(remaining) / int(limit)) * 100
+        if remaining_pct < 20:  # 20%以下の場合警告
+            if reset_timestamp:
+                import datetime
+                reset_time = datetime.datetime.fromtimestamp(int(reset_timestamp))
+                print(f"  ⚠️ Rate limit warning: {remaining}/{limit} remaining ({remaining_pct:.1f}%), resets at {reset_time.strftime('%H:%M:%S')}")
+            else:
+                print(f"  ⚠️ Rate limit warning: {remaining}/{remaining} remaining ({remaining_pct:.1f}%)")
+        elif int(remaining) % 100 == 0:  # 100の倍数で情報表示
+            print(f"  📊 Rate limit status: {remaining}/{limit} remaining ({remaining_pct:.1f}%)")
+    
+    return {
+        'remaining': int(remaining) if remaining else None,
+        'limit': int(limit) if limit else None,
+        'reset': int(reset_timestamp) if reset_timestamp else None
+    }
 
 def load_all_csv_data() -> Tuple[List[Dict], List[Dict], List[Dict]]:
     """全てのCSVデータを読み込み"""
@@ -112,6 +144,9 @@ def create_single_issue(issue_data: Dict, index: int, total: int, issue_type: st
             
             if response.status_code == 201:
                 issue = response.json()
+                # レート制限ヘッダーをチェック
+                check_rate_limit_headers(response)
+                
                 if attempt > 0:
                     print(f"  ✅ {issue_type} ({index + 1}/{total}) [retry {attempt}]: {issue_data['title'][:50]}...")
                 else:
@@ -119,10 +154,18 @@ def create_single_issue(issue_data: Dict, index: int, total: int, issue_type: st
                 return issue
             
             elif response.status_code == 403:
-                # 指数バックオフ
-                backoff_time = RETRY_DELAY * (2 ** attempt)
-                print(f"  ⏳ Rate limit hit ({index + 1}/{total}) [attempt {attempt + 1}], waiting {backoff_time}s...")
-                time.sleep(backoff_time)
+                # GitHub推奨: セカンダリレート制限の可能性
+                retry_after = response.headers.get('retry-after')
+                if retry_after:
+                    wait_time = int(retry_after)
+                    print(f"  ⏳ Rate limit (retry-after: {wait_time}s) ({index + 1}/{total}) [attempt {attempt + 1}]")
+                else:
+                    # 指数バックオフ with jitter
+                    base_delay = RETRY_DELAY if attempt == 0 else SECONDARY_LIMIT_DELAY
+                    jitter = random.uniform(0.8, 1.2)
+                    wait_time = int(base_delay * (2 ** (attempt // 2)) * jitter)
+                    print(f"  ⏳ Rate limit hit ({index + 1}/{total}) [attempt {attempt + 1}], waiting {wait_time}s...")
+                time.sleep(wait_time)
                 continue
                 
             elif response.status_code >= 500:
@@ -369,22 +412,65 @@ def retry_failed_issues(failed_issues: List[Tuple], max_retry_rounds: int = 2) -
     print(f"  ✅ Retry success: {len(retry_created)} issues created")
     return retry_created
 
+def check_initial_rate_limit():
+    """初期レート制限状態をチェック"""
+    try:
+        response = requests.get(f"{API_BASE}/rate_limit", headers=REST_HEADERS, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            core = data.get('resources', {}).get('core', {})
+            remaining = core.get('remaining', 0)
+            limit = core.get('limit', 0)
+            reset_timestamp = core.get('reset', 0)
+            
+            if reset_timestamp:
+                import datetime
+                reset_time = datetime.datetime.fromtimestamp(reset_timestamp)
+                print(f"📊 Initial rate limit: {remaining}/{limit} requests remaining")
+                print(f"🔄 Rate limit resets at: {reset_time.strftime('%Y-%m-%d %H:%M:%S')}")
+                
+                if remaining < 100:
+                    print(f"⚠️ Warning: Low rate limit remaining ({remaining}). Consider waiting until reset.")
+            return remaining
+    except Exception as e:
+        print(f"⚠️ Could not check rate limit: {str(e)}")
+    return None
+
+def estimate_completion_time(total_issues):
+    """完了予想時刻を計算"""
+    # 1秒間隔 + バッチ休憩を考慮
+    issues_per_batch = BATCH_SIZE
+    batches = math.ceil(total_issues / issues_per_batch)
+    
+    time_per_issue = REQUEST_DELAY
+    time_for_issues = total_issues * time_per_issue
+    time_for_batch_pauses = (batches - 1) * BATCH_PAUSE
+    
+    total_seconds = time_for_issues + time_for_batch_pauses
+    minutes = int(total_seconds // 60)
+    seconds = int(total_seconds % 60)
+    
+    print(f"⏱️ Estimated completion time: {minutes}m {seconds}s ({batches} batches)")
+    return total_seconds
+
 def main():
     """メイン処理"""
-    print("=" * 60)
-    print("🧠 SMART ALL-IN-ONE ISSUE CREATOR v4.3 (sequential + numbered)")
-    print("=" * 60)
+    print("=" * 70)
+    print("🧠 SMART ALL-IN-ONE ISSUE CREATOR v4.4 (GitHub Rate Limit Optimized)")
+    print("=" * 70)
     print(f"📦 Repository: {GITHUB_REPOSITORY}")
     print(f"⏰ Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"🔧 Script: create_all_issues_smart.py v4.3")
-    print(f"⚙️ Configuration:")
-    print(f"  • Parallel Workers: {PARALLEL_WORKERS}")
-    print(f"  • Request Delay: {REQUEST_DELAY}s")
-    print(f"  • Retry Delay: {RETRY_DELAY}s")
+    print(f"🔧 Script: create_all_issues_smart.py v4.4")
+    print(f"⚙️ GitHub Rate Limit Configuration:")
+    print(f"  • Request Delay: {REQUEST_DELAY}s (GitHub minimum: 1s)")
+    print(f"  • Batch Size: {BATCH_SIZE} (under 80/min limit)")
+    print(f"  • Batch Pause: {BATCH_PAUSE}s")
+    print(f"  • Retry Delay: {RETRY_DELAY}s (secondary limit handling)")
     print(f"  • Max Retries: {MAX_RETRIES}")
-    print(f"  • Batch Size: {BATCH_SIZE}")
-    print(f"  • Dependencies: Standard library only")
-    print("=" * 60)
+    print("=" * 70)
+    
+    # 初期レート制限チェック
+    check_initial_rate_limit()
     
     start_time = time.time()
     
@@ -397,12 +483,15 @@ def main():
             print("⚠️ No issues found in CSV files")
             return 1
         
-        # バッチ計算
+        # バッチ計算と時間予想
         total_batches = calculate_batches(total_issues, BATCH_SIZE)
         print(f"\n📊 Processing plan:")
         print(f"  • Total issues: {total_issues}")
         print(f"  • Batch size: {BATCH_SIZE}")
         print(f"  • Total batches: {total_batches}")
+        
+        # 完了予想時刻を表示
+        estimate_completion_time(total_issues)
         
         # プロジェクトIDを読み込み
         project_ids = load_project_ids()
@@ -448,10 +537,10 @@ def main():
                 else:
                     test_created.append(issue)
             
-            # バッチ間の休憩（長めに）
+            # バッチ間の休憩（GitHub推奨パターン）
             if batch_num < total_batches - 1:
-                print(f"  ⏳ Batch pause...")
-                time.sleep(15)  # 15秒に増加
+                print(f"  ⏳ Batch pause ({BATCH_PAUSE}s)...")
+                time.sleep(BATCH_PAUSE)
         
         # 失敗したもののリトライ
         retry_created = []
