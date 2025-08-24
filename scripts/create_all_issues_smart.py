@@ -88,19 +88,6 @@ def load_all_csv_data() -> Tuple[List[Dict], List[Dict], List[Dict]]:
     print(f"📋 Loaded: {len(task_issues)} task issues, {len(test_issues)} test issues, {len(kpt_issues)} KPT issues")
     print(f"📊 Total: {len(task_issues) + len(test_issues) + len(kpt_issues)} issues to create")
     
-    # デバッグ: 最初の数件のdifficultyを確認
-    if task_issues:
-        print(f"🔍 Debug: First few task difficulties:")
-        for i, task in enumerate(task_issues[:5]):
-            print(f"    Task {i+1}: {task.get('title', 'No title')[:50]}... -> difficulty: '{task.get('difficulty', 'None')}'")
-        
-        # 各難易度の数もカウント
-        difficulties = {}
-        for task in task_issues:
-            diff = task.get('difficulty', '')
-            difficulties[diff] = difficulties.get(diff, 0) + 1
-        print(f"🔍 Debug: Difficulty distribution: {difficulties}")
-    
     return task_issues, test_issues, kpt_issues
 
 def calculate_batches(total_count: int, batch_size: int) -> int:
@@ -321,20 +308,14 @@ def prepare_issue_data(issues: List[Dict], labels: List[str], issue_type: str) -
             # KPT issuesは既に適切な番号付けがされているのでそのまま使用
             numbered_title = title
             
-        existing_labels = [label.strip() for label in row.get('labels', '').split(',') if label.strip()]
+        # CSVからラベルを取得（"task,Required"のような形式に対応）
+        labels_str = row.get('labels', '').strip()
+        if labels_str.startswith('"') and labels_str.endswith('"'):
+            labels_str = labels_str[1:-1]  # クォートを除去
+        existing_labels = [label.strip() for label in labels_str.split(',') if label.strip()]
         
-        # タスクの場合は難易度をラベルとして使用、それ以外は従来通り
-        if issue_type == 'task':
-            difficulty = row.get('difficulty', '').strip()
-            if difficulty:
-                # 難易度をメインラベルとして使用
-                all_labels = list(set(existing_labels + [difficulty]))
-            else:
-                # 難易度が設定されていない場合はCSVのラベルのみ
-                all_labels = existing_labels
-        else:
-            # テストやKPTの場合は従来通り
-            all_labels = list(set(existing_labels + labels))
+        # 追加ラベルがある場合はマージ
+        all_labels = list(set(existing_labels + labels))
         
         issue_data = {
             'title': numbered_title,
@@ -427,9 +408,9 @@ def main():
         project_ids = load_project_ids()
         
         # Issue作成用データ準備
-        task_requests = prepare_issue_data(task_data, [], 'task')  # 難易度をラベルとして使用
-        test_requests = prepare_issue_data(test_data, ['test', 'qa'], 'test')
-        kpt_requests = prepare_issue_data(kpt_data, ['kpt', 'retrospective'], 'kpt')
+        task_requests = prepare_issue_data(task_data, [], 'task')  # CSVにラベルが含まれている
+        test_requests = prepare_issue_data(test_data, [], 'test')  # CSVにラベルが含まれている
+        kpt_requests = prepare_issue_data(kpt_data, [], 'kpt')  # CSVにラベルが含まれている
         all_requests = task_requests + test_requests + kpt_requests
         
         print(f"\n📋 Prepared requests: {len(all_requests)} issues")
