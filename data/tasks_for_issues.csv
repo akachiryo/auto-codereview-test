@@ -9,7 +9,7 @@ title,body,labels,assignee,milestone,priority,difficulty
 4. ローカルで初期画面が表示されたらOK
 
 # 完了条件
-- [ ] メンバー全員が上記の環境構築を完了する","task,development",,,medium,Required,Required
+- [ ] メンバー全員が上記の環境構築を完了する","",,,medium,Required,Required
 "タスク2: Seed作成","# 概要
 
 Users, Follows, Posts, Commentsのseedを作成する
@@ -19,7 +19,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 * [ ] Users、Follows、Posts、Commentsのseedを作成する
 * [ ] チーム内レビュー
-* [ ] mainブランチにマージ","task,development",,,medium,Required
+* [ ] mainブランチにマージ","",,,medium,Required
 "タスク3: ユーザー登録機能実装","# 概要
 
 要件：
@@ -36,7 +36,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題が全て完了すること","task,development",,,medium,Required
+子課題が全て完了すること","",,,medium,Required
 "タスク4: ログイン機能実装","# 概要
 
 要件：
@@ -53,7 +53,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題を全て完了する","task,development",,,medium,Required
+子課題を全て完了する","",,,medium,Required
 "タスク5: ログアウト","# 概要
 
 要件：
@@ -68,7 +68,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題が全て完了すること","task,development",,,medium,Required
+子課題が全て完了すること","",,,medium,Required
 "タスク6: サイドバーviewだけ","# 概要
 サイドバーのviewだけ実装する
 
@@ -77,7 +77,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 - [ ] チーム内レビュー
-- [ ] mainブランチにマージ","task,development",,,medium,Required
+- [ ] mainブランチにマージ","",,,medium,Required
 "タスク7: ログインユーザーのホーム","# 概要
 
 要件：
@@ -90,7 +90,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題が全て完了すること","task,development",,,medium,Required
+子課題が全て完了すること","",,,medium,Required
 "タスク8: ユーザーのツイート一覧","# 概要
 
 要件：
@@ -102,7 +102,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題を全て完了する","task,development",,,medium,Required
+子課題を全て完了する","",,,medium,Required
 "タスク9: ユーザーのツイートと返信一覧","# 概要
 
 要件：
@@ -113,7 +113,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題が全て完了する","task,development",,,medium,Required
+子課題が全て完了する","",,,medium,Required
 "タスク10: TOP","# 概要
 
 要件：
@@ -126,7 +126,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題が全て完了すること","task,development",,,medium,Required
+子課題が全て完了すること","",,,medium,Required
 "タスク11: TOP上部からの投稿","# 概要
 
 要件：
@@ -139,7 +139,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題を全て完了する","task,development",,,medium,Required
+子課題を全て完了する","",,,medium,Required
 "タスク12:サイドバー「ツイートをする」から投稿","# 概要
 
 要件：
@@ -152,7 +152,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題を全て完了する","task,development",,,medium,Required
+子課題を全て完了する","",,,medium,Required
 "タスク13:ツイートへのコメント","# 概要
 
 要件：
@@ -166,7 +166,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題が全て完了すること","task,development",,,medium,Required
+子課題が全て完了すること","",,,medium,Required
 "タスク14:コメントへのコメント","# 概要
 
 要件：
@@ -178,7 +178,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題が全て完了すること","task,development",,,medium,Required
+子課題が全て完了すること","",,,medium,Required
 "タスク15:ツイートへのコメント一覧","# 概要
 
 要件：
@@ -190,7 +190,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題が全て完了すること","task,development",,,medium,Required
+子課題が全て完了すること","",,,medium,Required
 "タスク16:フォローしているユーザー一覧","# 概要
 
 要件：
@@ -201,7 +201,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題が全て完了すること","task,development",,,medium,Required
+子課題が全て完了すること","",,,medium,Required
 "タスク17:フォロワー一覧","# 概要
 
 要件：
@@ -212,7 +212,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題が全て完了すること","task,development",,,medium,Required
+子課題が全て完了すること","",,,medium,Required
 "タスク18:他ユーザーホームからフォロー、解除","# 概要
 
 要件：
@@ -223,7 +223,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題が全て完了する","task,development",,,medium,Required
+子課題が全て完了する","",,,medium,Required
 "タスク19:フォロー一覧からフォロー、解除","# 概要
 
 要件：
@@ -234,7 +234,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題を全て完了する","task,development",,,medium,Required
+子課題を全て完了する","",,,medium,Required
 "タスク20:フォロワー一覧からフォロー、解除","# 概要
 
 要件：
@@ -245,7 +245,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題を全て完了する","task,development",,,medium,Required
+子課題を全て完了する","",,,medium,Required
 "タスク21:自分以外のユーザーのホーム","# 概要
 
 要件：
@@ -256,7 +256,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題を全て完了する","task,development",,,medium,Required
+子課題を全て完了する","",,,medium,Required
 "タスク22:いいね、いいね取り消し","# 概要
 
 要件：
@@ -271,7 +271,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題を全て完了する","task,development",,,medium,Required
+子課題を全て完了する","",,,medium,Required
 "タスク23:コメント編集","# 概要
 
 要件：
@@ -283,7 +283,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題が全て完了する","task,development",,,medium,Optional
+子課題が全て完了する","",,,medium,Optional
 "タスク24:ツイート削除","# 概要
 
 要件：
@@ -296,7 +296,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題が全て完了する","task,development",,,medium,Optional
+子課題が全て完了する","",,,medium,Optional
 "タスク25:コメント削除","# 概要
 
 要件：
@@ -308,7 +308,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題を全て完了する","task,development",,,medium,Optional
+子課題を全て完了する","",,,medium,Optional
 "タスク26:サイドバー設定→トグルモーダル","# 概要
 
 要件：
@@ -319,7 +319,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題が全て完了する","task,development",,,medium,Challenge
+子課題が全て完了する","",,,medium,Challenge
 "タスク27:アカウント削除","# 概要
 
 要件：
@@ -328,7 +328,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題が全て完了する","task,development",,,medium,Challenge
+子課題が全て完了する","",,,medium,Challenge
 "タスク28:アカウント編集","# 概要
 
 要件：
@@ -337,7 +337,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題が全て完了する","task,development",,,medium,Challenge
+子課題が全て完了する","",,,medium,Challenge
 "タスク29:プロフィール編集","# 概要
 
 要件：
@@ -347,7 +347,7 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-子課題を全て完了する","task,development",,,medium,Challenge
+子課題を全て完了する","",,,medium,Challenge
 "タスク30:成果発表会準備","# 概要
 ## 成果発表会とは
 作成したイマココSNSと、チーム開発で学んだことをPRUMの社員に発表する会を開催する。
@@ -376,4 +376,4 @@ Users, Follows, Posts, Commentsのseedを作成する
 
 # 完了条件
 
-* 成果発表会を開催する。","task,development",,,medium,Required
+* 成果発表会を開催する。","",,,medium,Required
