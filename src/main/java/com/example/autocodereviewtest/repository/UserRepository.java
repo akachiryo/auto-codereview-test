@@ -16,11 +16,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     List<User> findByNameContaining(String name);
     
-    // 非効率なクエリ（N+1問題の可能性）
-    @Query("SELECT u FROM User u WHERE u.name LIKE %:name%")
-    List<User> findUsersByNameLike(@Param("name") String name);
+    List<User> findByNameContainingIgnoreCase(String name);
     
-    // SQLインジェクションの脆弱性がある可能性のあるクエリ
-    @Query(value = "SELECT * FROM users WHERE name = ?1", nativeQuery = true)
-    List<User> findUsersByNameNative(String name);
+    @Query("SELECT u FROM User u WHERE LOWER(u.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+    List<User> findUsersByNameLike(@Param("name") String name);
 } 

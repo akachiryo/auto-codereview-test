@@ -21,7 +21,6 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
     
-    // パスワードをプレーンテキストで保存（セキュリティ上の問題あり）
     @Column(nullable = false)
     private String password;
     
@@ -92,14 +91,12 @@ public class User {
         this.updatedAt = updatedAt;
     }
     
-    // toString()メソッド（パスワードを含む - セキュリティ問題）
     @Override
     public String toString() {
         return "User{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 '}';

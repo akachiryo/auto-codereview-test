@@ -2,15 +2,6 @@
 
 イマココSNS開発プロジェクトのWikiページです。
 
-## 📊 プレゼンテーション資料
-
-### スライド形式で閲覧
-- [🎯 **チーム開発説明資料（スライド）**](https://akachiryo.github.io/auto-codereview-test) - インタラクティブなスライド形式
-- [📄 **PDF版**](https://akachiryo.github.io/auto-codereview-test/slides.pdf) - ダウンロード可能なPDF
-
-### テキスト形式で閲覧
-- [[Team-Development-Presentation|チーム開発説明資料（テキスト）]] - Wikiページ形式
-
 ## 📋 ドキュメント一覧
 
 - [[テーブル設計書]] - データベース設計の詳細
