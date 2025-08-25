@@ -1,4 +1,4 @@
-name: 🚀 Team Development Setup v3.0 (CONSOLIDATED)
+name: 🚀 Team Development Setup v4.0 (PARALLEL OPTIMIZED)
 
 on:
   workflow_dispatch:
@@ -132,40 +132,191 @@ jobs:
         echo "✅ Wiki setup complete"
         
     # ===============================
-    # Step 4: Create ALL Issues (Smart Processing)
+    # Step 4: Create Issues (Parallel Processing)
     # ===============================
-    - name: 🧠 Create ALL Issues - Smart Auto-Batching
+
+  # 並列ジョブ1: タスクIssue作成
+  create-task-issues:
+    runs-on: ubuntu-latest
+    needs: setup-environment
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: pip install requests pandas
+        
+    - name: 📋 Create Task Issues
       env:
         TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
         GITHUB_REPOSITORY: ${{ github.repository }}
       run: |
-        echo "🧠 Step 4: Creating ALL Issues with Smart Auto-Batching v4.1..."
-        echo "🚀 INTELLIGENT PROCESSING: Auto-detects CSV size and creates optimal batches"
-        echo "⚡ PARALLEL PROCESSING: 6x workers, no external dependencies"
-        echo "📊 COMPLETE COVERAGE: Processes 100% of CSV data dynamically"
-        python scripts/create_all_issues_smart.py
-        echo "✅ Smart issue creation completed!"
+        echo "📋 Creating Task Issues (Parallel Job 1/3)..."
+        python scripts/create_task_issues.py
+        echo "✅ Task issues creation completed!"
+        
+    - name: Upload task results
+      uses: actions/upload-artifact@v4
+      with:
+        name: task-issues-result
+        path: task_issues_result.txt
+        retention-days: 1
+
+  # 並列ジョブ2: テストIssue作成（順序保持）
+  create-test-issues:
+    runs-on: ubuntu-latest
+    needs: setup-environment
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: pip install requests pandas
+        
+    - name: 🧪 Create Test Issues
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        echo "🧪 Creating Test Issues (Parallel Job 2/3, Order Preserved)..."
+        python scripts/create_test_issues.py
+        echo "✅ Test issues creation completed!"
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-issues-result
+        path: test_issues_result.txt
+        retention-days: 1
+
+  # 並列ジョブ3: KPTIssue作成
+  create-kpt-issues:
+    runs-on: ubuntu-latest
+    needs: setup-environment
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: pip install requests pandas
+        
+    - name: 🎯 Create KPT Issues
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        echo "🎯 Creating KPT Issues (Parallel Job 3/3)..."
+        python scripts/create_kpt_issues.py
+        echo "✅ KPT issues creation completed!"
+        
+    - name: Upload KPT results
+      uses: actions/upload-artifact@v4
+      with:
+        name: kpt-issues-result
+        path: kpt_issues_result.txt
+        retention-days: 1
+
+  # 統合ジョブ: プロジェクトリンク
+  link-to-projects:
+    runs-on: ubuntu-latest
+    needs: [create-task-issues, create-test-issues, create-kpt-issues]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: pip install requests pandas
+        
+    - name: Download all results
+      uses: actions/download-artifact@v4
+      with:
+        pattern: '*-issues-result'
+        merge-multiple: true
+        
+    - name: 🔗 Link Issues to Projects
+      env:
+        TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        echo "🔗 Linking all created issues to projects..."
+        python scripts/link_all_to_projects.py
+        echo "✅ Project linking completed!"
         
         
-    # ===============================
-    # Step 5: Final Summary
-    # ===============================
+  # ===============================
+  # Final Summary Job
+  # ===============================
+  final-summary:
+    runs-on: ubuntu-latest
+    needs: [setup-environment, create-task-issues, create-test-issues, create-kpt-issues, link-to-projects]
+    if: always()
+    
+    steps:
+    - name: Download all results
+      uses: actions/download-artifact@v4
+      with:
+        pattern: '*-result'
+        merge-multiple: true
+        
     - name: 🎉 Display Final Summary
       run: |
         echo ""
         echo "🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉"
         echo "🎉                                        🎉"
-        echo "🎉    チーム開発環境セットアップ完了！ v3.0   🎉"
-        echo "🎉    Team Development Setup Complete! v3.0   🎉"
-        echo "🎉                                        🎉"
+        echo "🎉    チーム開発環境セットアップ完了！ v4.0   🎉"
+        echo "🎉    Team Development Setup Complete! v4.0   🎉"
+        echo "🎉           (PARALLEL OPTIMIZED)             🎉"
         echo "🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉"
         echo ""
-        echo "🆕 VERSION CONFIRMATION: This was run with v3.0 (CONSOLIDATED)"
+        echo "🆕 VERSION: v4.0 (PARALLEL PROCESSING OPTIMIZED)"
         echo "✅ Successfully Created:"
         echo "• 📊 3 GitHub Projects V2"
-        echo "• 🧠 ALL 249 Issues from CSV (SMART v4.1 - auto-batching)"
+        echo "• 📋 Task Issues (parallel job)"
+        echo "• 🧪 Test Issues (sequential, order preserved)"
+        echo "• 🎯 KPT Issues (parallel job)"
+        echo "• 🔗 All issues linked to projects"
         echo "• 📚 Wiki pages with table design"
         echo "• 💬 Discussion template"
+        echo ""
+        
+        echo "📊 Issue Creation Results:"
+        if [ -f "task_issues_result.txt" ]; then
+          echo "• $(head -1 task_issues_result.txt)"
+        fi
+        if [ -f "test_issues_result.txt" ]; then
+          echo "• $(head -1 test_issues_result.txt)"
+        fi
+        if [ -f "kpt_issues_result.txt" ]; then
+          echo "• $(head -1 kpt_issues_result.txt)"
+        fi
+        if [ -f "project_linking_result.txt" ]; then
+          echo "• $(head -4 project_linking_result.txt | tail -1)"
+        fi
+        
         echo ""
         echo "🔗 Access your resources:"
         echo "• Projects: https://github.com/${{ github.repository }}/projects"
@@ -173,10 +324,8 @@ jobs:
         echo "• Wiki: https://github.com/${{ github.repository }}/wiki"
         echo "• Discussions: https://github.com/${{ github.repository }}/discussions"
         echo ""
-        echo "📝 Notes:"
-        echo "• If Wiki doesn't appear, enable it in repository settings"
-        echo "• Create '議事録' category manually in Discussions"
-        echo "• v4.1: SMART processing - auto-detects CSV size and creates optimal batches"
-        echo "• v4.1: No dependency issues - uses standard library only"
-        echo "• v4.1: 100% coverage guaranteed - processes all CSV data dynamically"
-        echo "• v4.1: Check smart_issue_creation_result.txt for detailed statistics"
+        echo "🚀 Performance Improvements:"
+        echo "• Parallel processing: Task, Test, KPT issues created simultaneously"
+        echo "• Optimized API settings: 0.8s delay, 15 batch size, 8s batch pause"
+        echo "• Target execution time: ~5 minutes (down from ~15 minutes)"
+        echo "• Test order preservation: Maintained sequential execution for tests"
