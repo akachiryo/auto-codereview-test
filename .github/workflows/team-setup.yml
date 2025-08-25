@@ -68,11 +68,13 @@ jobs:
           echo "⚠️ project_ids.txt not found"
         fi
         
-    - name: Upload project IDs
+    - name: Upload project IDs and status
       uses: actions/upload-artifact@v4
       with:
         name: project-ids
-        path: project_ids.txt
+        path: |
+          project_ids.txt
+          project_status.txt
         retention-days: 1
         
     # ===============================
@@ -160,6 +162,11 @@ jobs:
     - name: Install dependencies
       run: pip install requests pandas
         
+    - name: Download project status
+      uses: actions/download-artifact@v4
+      with:
+        name: project-ids
+        
     - name: 📋 Create Task Issues
       env:
         TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
@@ -194,6 +201,11 @@ jobs:
     - name: Install dependencies
       run: pip install requests pandas
         
+    - name: Download project status
+      uses: actions/download-artifact@v4
+      with:
+        name: project-ids
+        
     - name: 🧪 Create Test Issues
       env:
         TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
@@ -227,6 +239,11 @@ jobs:
         
     - name: Install dependencies
       run: pip install requests pandas
+        
+    - name: Download project status
+      uses: actions/download-artifact@v4
+      with:
+        name: project-ids
         
     - name: 🎯 Create KPT Issues
       env:

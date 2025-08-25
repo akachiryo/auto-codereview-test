@@ -157,6 +157,18 @@ def main():
     start_time = time.time()
     
     try:
+        # プロジェクトステータスチェック
+        if os.path.exists('project_status.txt'):
+            with open('project_status.txt', 'r') as f:
+                status = f.read().strip()
+            if status == 'ALL_SKIPPED':
+                print("\n✅ All projects already exist. Skipping test issue creation.")
+                print("💡 Projects were reused from previous setup.")
+                # 空の結果ファイルを作成（後続処理のため）
+                with open('test_issues_result.txt', 'w', encoding='utf-8') as f:
+                    f.write("Test Issues: SKIPPED (projects already exist)\n")
+                return 0
+        
         # データ読み込み
         test_data = load_test_data()
         

@@ -235,6 +235,16 @@ def main():
         with open('project_ids.txt', 'w', encoding='utf-8') as f:
             f.write('\n'.join(project_info))
     
+    # プロジェクトステータスを保存（Issue作成制御用）
+    all_skipped = len(skipped_projects) == len(projects)
+    with open('project_status.txt', 'w', encoding='utf-8') as f:
+        if all_skipped:
+            f.write('ALL_SKIPPED')
+            print(f"\n📝 Status: ALL_SKIPPED (all projects already exist)")
+        else:
+            f.write('CREATED')
+            print(f"\n📝 Status: CREATED (some projects were created)")
+    
     print(f"\n✨ Project setup completed!")
     print(f"📌 Summary:")
     print(f"  • Created {len(created_projects) - len(skipped_projects)} new projects")
