@@ -133,30 +133,36 @@ def get_repository_info() -> Optional[Dict]:
         return repo
     return None
 
-def delete_category(category_id: str, category_name: str) -> bool:
-    """Discussionカテゴリーを削除"""
-    # API Reference: https://docs.github.com/en/graphql/reference/mutations#deletediscussioncategory
+def get_existing_discussions(repository_id: str) -> List[Dict]:
+    """既存のディスカッションを取得"""
+    # API Reference: https://docs.github.com/en/graphql/reference/objects#discussionconnection
     query = """
-    mutation($categoryId: ID!) {
-        deleteDiscussionCategory(input: {categoryId: $categoryId}) {
-            repository {
-                id
+    query($owner: String!, $name: String!) {
+        repository(owner: $owner, name: $name) {
+            discussions(first: 100) {
+                nodes {
+                    id
+                    title
+                    body
+                    category {
+                        id
+                        name
+                    }
+                }
             }
         }
     }
     """
     
     variables = {
-        'categoryId': category_id
+        'owner': REPO_OWNER,
+        'name': REPO_NAME
     }
     
     result = graphql_request(query, variables)
-    if result and 'deleteDiscussionCategory' in result:
-        print(f"  ✅ Deleted category: {category_name}")
-        return True
-    else:
-        print(f"  ❌ Failed to delete category: {category_name}")
-        return False
+    if result and 'repository' in result:
+        return result['repository']['discussions']['nodes']
+    return []
 
 def create_category_via_web_api(repository_id: str, name: str, description: str) -> Optional[str]:
     """Discussion カテゴリーの作成（Web API制限あり）"""
@@ -226,22 +232,24 @@ def main():
     repository_id = repo_info['id']
     existing_categories = repo_info['discussionCategories']['nodes']
     
-    print(f"\n🗑️ Attempting to remove default categories...")
-    # デフォルトカテゴリーを削除（API制限で失敗する可能性あり）
-    categories_deleted = 0
-    for category in existing_categories:
-        if delete_category(category['id'], category['name']):
-            categories_deleted += 1
-        time.sleep(1)  # Rate limit対策
+    # 既存のディスカッションをチェック
+    print(f"\n🔍 Checking for existing discussions...")
+    existing_discussions = get_existing_discussions(repository_id)
     
-    print(f"📊 Successfully deleted {categories_deleted}/{len(existing_categories)} categories")
+    # 議事録テンプレートが既に存在するかチェック
+    template_exists = False
+    for discussion in existing_discussions:
+        if "議事録テンプレート" in discussion.get('title', ''):
+            template_exists = True
+            print(f"  ✅ Meeting minutes template already exists: {discussion['title']}")
+            break
     
-    print(f"\n📝 Trying to work with discussions...")
+    print(f"\n📝 Working with discussions...")
     
     # GitHub API では discussion category の作成ができないため、
     # 既存のカテゴリーを確認してそこに議事録テンプレートを作成
     
-    if existing_categories:
+    if existing_categories and not template_exists:
         # 最初のカテゴリーを使用してテンプレートを作成
         first_category = existing_categories[0]
         category_id = first_category['id']
@@ -303,6 +311,8 @@ YYYY/MM/DD HH:MM ～ HH:MM
 """
         
         create_discussion(repository_id, category_id, template_title, template_body)
+    elif template_exists:
+        print(f"  ℹ️ Meeting minutes template already exists, skipping creation")
     else:
         print(f"  ⚠️ No discussion categories found")
         print(f"  💡 Please enable discussions first in repository settings")
@@ -313,10 +323,10 @@ YYYY/MM/DD HH:MM ～ HH:MM
     print(f"\n✨ Discussions setup completed!")
     print(f"📌 Setup result:")
     if existing_categories:
-        print(f"  • Meeting minutes template created in existing category")
-        print(f"  • Deleted {categories_deleted}/{len(existing_categories)} default categories")
-        if categories_deleted < len(existing_categories):
-            print(f"  ⚠️ Some categories could not be deleted (API limitations)")
+        if template_exists:
+            print(f"  • Meeting minutes template already exists")
+        else:
+            print(f"  • Meeting minutes template created in existing category")
     else:
         print(f"  • No existing categories found")
         

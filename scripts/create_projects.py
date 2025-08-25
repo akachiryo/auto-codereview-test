@@ -45,7 +45,7 @@ def graphql_request(query: str, variables: Dict = None) -> Dict:
     return data.get('data', {})
 
 def get_repository_info() -> Optional[Dict]:
-    """リポジトリ情報を取得"""
+    """リポジトリ情報と既存プロジェクトを取得"""
     # API Reference: https://docs.github.com/en/graphql/reference/queries#repository
     query = """
     query($owner: String!, $name: String!) {
@@ -54,6 +54,14 @@ def get_repository_info() -> Optional[Dict]:
             owner {
                 id
                 __typename
+            }
+            projectsV2(first: 100) {
+                nodes {
+                    id
+                    title
+                    number
+                    url
+                }
             }
         }
     }
@@ -68,7 +76,8 @@ def get_repository_info() -> Optional[Dict]:
     if result and 'repository' in result:
         return {
             'repository_id': result['repository']['id'],
-            'owner_id': result['repository']['owner']['id']
+            'owner_id': result['repository']['owner']['id'],
+            'existing_projects': result['repository']['projectsV2']['nodes']
         }
     return None
 
@@ -172,6 +181,14 @@ def main():
         print("❌ Failed to get repository information")
         return 1
     
+    # 既存プロジェクトをチェック
+    existing_projects = repo_info.get('existing_projects', [])
+    existing_titles = {p['title']: p for p in existing_projects}
+    
+    print(f"\n🔍 Found {len(existing_projects)} existing projects")
+    for project in existing_projects:
+        print(f"  • {project['title']} (#{project['number']})")
+    
     # 3つのプロジェクトを作成
     projects = [
         "イマココSNS（タスク）",
@@ -180,22 +197,31 @@ def main():
     ]
     
     created_projects = {}
+    skipped_projects = {}
     
     for project_title in projects:
-        project_id = create_project(project_title, repo_info)
-        if project_id:
-            created_projects[project_title] = project_id
+        # 既存プロジェクトをチェック
+        if project_title in existing_titles:
+            existing_project = existing_titles[project_title]
+            print(f"\nℹ️ Project already exists: {project_title}")
+            print(f"🆔 Using existing project ID: {existing_project['id']}")
+            skipped_projects[project_title] = existing_project['id']
+            created_projects[project_title] = existing_project['id']
+        else:
+            project_id = create_project(project_title, repo_info)
+            if project_id:
+                created_projects[project_title] = project_id
             
-            # "タスク" プロジェクトにのみ難易度フィールドを追加
-            if "タスク" in project_title:
-                print(f"\n📝 Adding custom field to: {project_title}")
-                difficulty_options = ["Required", "Optional", "Challenge"]
-                field_id = create_custom_field(project_id, "Difficulty", difficulty_options)
-                
-                if field_id:
-                    # フィールドIDも保存（後で使用）
-                    with open('difficulty_field.txt', 'w', encoding='utf-8') as f:
-                        f.write(f"{project_title}:{project_id}:{field_id}")
+                # "タスク" プロジェクトにのみ難易度フィールドを追加
+                if "タスク" in project_title:
+                    print(f"\n📝 Adding custom field to: {project_title}")
+                    difficulty_options = ["Required", "Optional", "Challenge"]
+                    field_id = create_custom_field(project_id, "Difficulty", difficulty_options)
+                    
+                    if field_id:
+                        # フィールドIDも保存（後で使用）
+                        with open('difficulty_field.txt', 'w', encoding='utf-8') as f:
+                            f.write(f"{project_title}:{project_id}:{field_id}")
         
         # Rate limit対策
         time.sleep(2)
@@ -209,10 +235,16 @@ def main():
         with open('project_ids.txt', 'w', encoding='utf-8') as f:
             f.write('\n'.join(project_info))
     
-    print(f"\n✨ Project creation completed!")
-    print(f"📌 Created {len(created_projects)} projects:")
-    for title in created_projects:
-        print(f"  • {title}")
+    print(f"\n✨ Project setup completed!")
+    print(f"📌 Summary:")
+    print(f"  • Created {len(created_projects) - len(skipped_projects)} new projects")
+    print(f"  • Reused {len(skipped_projects)} existing projects")
+    
+    if created_projects:
+        print(f"\n📊 All projects:")
+        for title in created_projects:
+            status = " (existing)" if title in skipped_projects else " (new)"
+            print(f"  • {title}{status}")
     
     print(f"\n🔗 Access your projects:")
     print(f"  https://github.com/{GITHUB_REPOSITORY}/projects")
