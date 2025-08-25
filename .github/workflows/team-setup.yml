@@ -172,7 +172,7 @@ jobs:
         TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
         GITHUB_REPOSITORY: ${{ github.repository }}
       run: |
-        echo "📋 Creating Task Issues (Parallel Job 1/3)..."
+        echo "📋 Creating Task Issues (Sequential Job 1/3)..."
         python scripts/create_task_issues.py
         echo "✅ Task issues creation completed!"
         
@@ -183,10 +183,10 @@ jobs:
         path: task_issues_result.txt
         retention-days: 1
 
-  # 並列ジョブ2: テストIssue作成（順序保持）
+  # 順次ジョブ2: テストIssue作成（順序保持）
   create-test-issues:
     runs-on: ubuntu-latest
-    needs: setup-environment
+    needs: create-task-issues  # タスク完了後に実行（Rate制限回避）
     if: success()
     
     steps:
@@ -211,7 +211,7 @@ jobs:
         TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
         GITHUB_REPOSITORY: ${{ github.repository }}
       run: |
-        echo "🧪 Creating Test Issues (Parallel Job 2/3, Order Preserved)..."
+        echo "🧪 Creating Test Issues (Sequential Job 2/3, Order Preserved)..."
         python scripts/create_test_issues.py
         echo "✅ Test issues creation completed!"
         
@@ -222,10 +222,10 @@ jobs:
         path: test_issues_result.txt
         retention-days: 1
 
-  # 並列ジョブ3: KPTIssue作成
+  # 順次ジョブ3: KPTIssue作成
   create-kpt-issues:
     runs-on: ubuntu-latest
-    needs: setup-environment
+    needs: create-test-issues  # テスト完了後に実行（Rate制限回避）
     if: success()
     
     steps:
@@ -250,7 +250,7 @@ jobs:
         TEAM_SETUP_TOKEN: ${{ secrets.TEAM_SETUP_TOKEN }}
         GITHUB_REPOSITORY: ${{ github.repository }}
       run: |
-        echo "🎯 Creating KPT Issues (Parallel Job 3/3)..."
+        echo "🎯 Creating KPT Issues (Sequential Job 3/3)..."
         python scripts/create_kpt_issues.py
         echo "✅ KPT issues creation completed!"
         
@@ -264,7 +264,7 @@ jobs:
   # 統合ジョブ: プロジェクトリンク
   link-to-projects:
     runs-on: ubuntu-latest
-    needs: [setup-environment, create-task-issues, create-test-issues, create-kpt-issues]
+    needs: [setup-environment, create-kpt-issues]  # KPT完了後に実行（簡略化）
     if: always() && needs.setup-environment.result == 'success'
     
     steps:

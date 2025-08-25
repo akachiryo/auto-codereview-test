@@ -15,11 +15,11 @@ from typing import Dict, List, Optional
 TEAM_SETUP_TOKEN = os.environ.get('TEAM_SETUP_TOKEN')
 GITHUB_REPOSITORY = os.environ.get('GITHUB_REPOSITORY')
 
-# 最適化されたRate Limit設定
-REQUEST_DELAY = 0.8      # 0.8秒間隔（高速化）
-BATCH_SIZE = 15          # バッチサイズ増加
-BATCH_PAUSE = 8.0        # バッチ間休憩短縮
-MAX_RETRIES = 10
+# Rate Limit設定（保守的）
+REQUEST_DELAY = 1.5      # 1.5秒間隔（Rate制限回避）
+BATCH_SIZE = 10          # 小さめのバッチ
+BATCH_PAUSE = 15.0       # 長めの休憩
+MAX_RETRIES = 5          # リトライ回数削減
 
 if not TEAM_SETUP_TOKEN or not GITHUB_REPOSITORY:
     raise ValueError("TEAM_SETUP_TOKEN and GITHUB_REPOSITORY environment variables are required")
@@ -70,8 +70,12 @@ def create_single_issue(issue_data: Dict, index: int, total: int) -> Optional[Di
             
             elif response.status_code == 403:
                 retry_after = response.headers.get('retry-after')
-                wait_time = int(retry_after) if retry_after else (30 * (attempt + 1))
-                print(f"  ⏳ Rate limit, waiting {wait_time}s...")
+                if retry_after:
+                    wait_time = int(retry_after) + 10  # 余裕を持たせる
+                else:
+                    wait_time = 60  # デフォルト60秒待機
+                remaining = response.headers.get('x-ratelimit-remaining', 'unknown')
+                print(f"  ⏳ Rate limit hit (remaining: {remaining}), waiting {wait_time}s...")
                 time.sleep(wait_time)
                 continue
                 
@@ -129,7 +133,7 @@ def prepare_task_data(tasks: List[Dict]) -> List[Dict]:
     
     return task_requests
 
-def create_task_issues_batch(issues_data: List[Dict], batch_num: int, total_batches: int) -> List[Dict]:
+def create_task_issues_batch(issues_data: List[Dict], batch_num: int, total_batches: int, start_time: float) -> List[Dict]:
     """タスクIssuesをバッチ作成"""
     created_issues = []
     
@@ -139,6 +143,11 @@ def create_task_issues_batch(issues_data: List[Dict], batch_num: int, total_batc
         issue = create_single_issue(issue_data, i, len(issues_data))
         if issue:
             created_issues.append(issue)
+        
+        # 進捗表示（タイムアウト防止）
+        if (i + 1) % 5 == 0:
+            elapsed = time.time() - start_time
+            print(f"  📊 Progress: {i + 1}/{len(issues_data)} in batch {batch_num} - Elapsed: {elapsed:.1f}s")
     
     print(f"📊 Task batch {batch_num} result: {len(created_issues)}/{len(issues_data)} issues created")
     return created_issues
@@ -188,7 +197,7 @@ def main():
             end_idx = min(start_idx + BATCH_SIZE, len(task_requests))
             batch_requests = task_requests[start_idx:end_idx]
             
-            batch_created = create_task_issues_batch(batch_requests, batch_num + 1, total_batches)
+            batch_created = create_task_issues_batch(batch_requests, batch_num + 1, total_batches, start_time)
             all_created.extend(batch_created)
             
             # バッチ間休憩

@@ -15,11 +15,11 @@ from typing import Dict, List, Optional
 TEAM_SETUP_TOKEN = os.environ.get('TEAM_SETUP_TOKEN')
 GITHUB_REPOSITORY = os.environ.get('GITHUB_REPOSITORY')
 
-# 最適化されたRate Limit設定（テストは大量のため少し保守的）
-REQUEST_DELAY = 0.8      # 0.8秒間隔
-BATCH_SIZE = 15          # バッチサイズ増加
-BATCH_PAUSE = 8.0        # バッチ間休憩短縮
-MAX_RETRIES = 10
+# Rate Limit設定（保守的）
+REQUEST_DELAY = 1.5      # 1.5秒間隔（Rate制限回避）
+BATCH_SIZE = 10          # 小さめのバッチ
+BATCH_PAUSE = 15.0       # 長めの休憩
+MAX_RETRIES = 5          # リトライ回数削減
 
 if not TEAM_SETUP_TOKEN or not GITHUB_REPOSITORY:
     raise ValueError("TEAM_SETUP_TOKEN and GITHUB_REPOSITORY environment variables are required")
@@ -70,8 +70,12 @@ def create_single_issue(issue_data: Dict, index: int, total: int) -> Optional[Di
             
             elif response.status_code == 403:
                 retry_after = response.headers.get('retry-after')
-                wait_time = int(retry_after) if retry_after else (30 * (attempt + 1))
-                print(f"  ⏳ Rate limit, waiting {wait_time}s...")
+                if retry_after:
+                    wait_time = int(retry_after) + 10  # 余裕を持たせる
+                else:
+                    wait_time = 60  # デフォルト60秒待機
+                remaining = response.headers.get('x-ratelimit-remaining', 'unknown')
+                print(f"  ⏳ Rate limit hit (remaining: {remaining}), waiting {wait_time}s...")
                 time.sleep(wait_time)
                 continue
                 
@@ -129,7 +133,7 @@ def prepare_test_data(tests: List[Dict]) -> List[Dict]:
     
     return test_requests
 
-def create_test_issues_batch(issues_data: List[Dict], batch_num: int, total_batches: int) -> List[Dict]:
+def create_test_issues_batch(issues_data: List[Dict], batch_num: int, total_batches: int, start_time: float, total_created: int, total_issues: int) -> List[Dict]:
     """テストIssuesをバッチ作成（順序保持）"""
     created_issues = []
     
@@ -140,6 +144,15 @@ def create_test_issues_batch(issues_data: List[Dict], batch_num: int, total_batc
         issue = create_single_issue(issue_data, i, len(issues_data))
         if issue:
             created_issues.append(issue)
+        
+        # 進捗表示（タイムアウト防止）
+        current_total = total_created + len(created_issues)
+        if (i + 1) % 5 == 0 or i == len(issues_data) - 1:
+            elapsed = time.time() - start_time
+            rate = current_total / elapsed if elapsed > 0 else 0
+            remaining_issues = total_issues - current_total
+            eta = remaining_issues / rate if rate > 0 else 0
+            print(f"  📊 Progress: {current_total}/{total_issues} ({current_total*100/total_issues:.1f}%) - ETA: {eta/60:.1f} min")
     
     print(f"📊 Test batch {batch_num} result: {len(created_issues)}/{len(issues_data)} issues created")
     return created_issues
@@ -194,12 +207,15 @@ def main():
             end_idx = min(start_idx + BATCH_SIZE, len(test_requests))
             batch_requests = test_requests[start_idx:end_idx]
             
-            batch_created = create_test_issues_batch(batch_requests, batch_num + 1, total_batches)
+            batch_created = create_test_issues_batch(
+                batch_requests, 
+                batch_num + 1, 
+                total_batches, 
+                start_time,
+                len(all_created),
+                len(test_requests)
+            )
             all_created.extend(batch_created)
-            
-            # 進捗表示
-            progress = (len(all_created) / len(test_requests)) * 100
-            print(f"📊 Overall progress: {len(all_created)}/{len(test_requests)} ({progress:.1f}%)")
             
             # バッチ間休憩
             if batch_num < total_batches - 1:
