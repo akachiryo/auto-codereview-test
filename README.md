@@ -4,8 +4,6 @@
 
 ## 🚀 チーム開発環境自動セットアップ
 
-## 🔑 セットアップ手順
-
 ### 1. GitHub Personal Access Tokenの作成
 
 1. **Personal Access Tokenの作成**
@@ -21,6 +19,14 @@
    - New repository secret
    - Name: `TEAM_SETUP_TOKEN`
    - Secret: 作成したトークンを貼り付け
+
+### 3. 自動セットアップ準備
+wikiを変更可能状態にする
+
+1. [wiki](../../wiki) に遷移
+2. `Create the first page` ボタンをクリック
+3. 何も編集せず右下の`Save page`ボタンをクリック
+4. Home画面が表示される
 
 ### 2. 自動セットアップの実行
 [![🚀 Team Setup](https://img.shields.io/badge/🚀_Team_Setup_v3.0-Click_to_Start-success?style=for-the-badge&logo=github)](../../actions/workflows/team-setup.yml)

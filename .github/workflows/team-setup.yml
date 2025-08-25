@@ -68,6 +68,13 @@ jobs:
           echo "⚠️ project_ids.txt not found"
         fi
         
+    - name: Upload project IDs
+      uses: actions/upload-artifact@v4
+      with:
+        name: project-ids
+        path: project_ids.txt
+        retention-days: 1
+        
     # ===============================
     # Step 2: Setup Discussions
     # ===============================
@@ -139,6 +146,7 @@ jobs:
   create-task-issues:
     runs-on: ubuntu-latest
     needs: setup-environment
+    if: success()
     
     steps:
     - name: Checkout repository
@@ -172,6 +180,7 @@ jobs:
   create-test-issues:
     runs-on: ubuntu-latest
     needs: setup-environment
+    if: success()
     
     steps:
     - name: Checkout repository
@@ -205,6 +214,7 @@ jobs:
   create-kpt-issues:
     runs-on: ubuntu-latest
     needs: setup-environment
+    if: success()
     
     steps:
     - name: Checkout repository
@@ -237,7 +247,8 @@ jobs:
   # 統合ジョブ: プロジェクトリンク
   link-to-projects:
     runs-on: ubuntu-latest
-    needs: [create-task-issues, create-test-issues, create-kpt-issues]
+    needs: [setup-environment, create-task-issues, create-test-issues, create-kpt-issues]
+    if: always() && needs.setup-environment.result == 'success'
     
     steps:
     - name: Checkout repository
@@ -251,7 +262,12 @@ jobs:
     - name: Install dependencies
       run: pip install requests pandas
         
-    - name: Download all results
+    - name: Download project IDs
+      uses: actions/download-artifact@v4
+      with:
+        name: project-ids
+        
+    - name: Download all issue results
       uses: actions/download-artifact@v4
       with:
         pattern: '*-issues-result'
