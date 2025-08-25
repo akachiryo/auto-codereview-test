@@ -1,25 +1,49 @@
-# Spring Boot User Management Application
+# イマココSNS開発プロジェクト
 
-シンプルなユーザー管理機能を提供するSpring Bootアプリケーションです。
+このプロジェクトは、アカデミー生を対象としたイマココSNSチーム開発用リポジトリです。
 
-## ✨ 機能
+## 🚀 チーム開発環境自動セットアップ
 
-- **ユーザー管理**: CRUD操作によるユーザー管理
-- **認証機能**: BCryptを使用した安全なパスワードハッシュ化
-- **RESTful API**: 標準的なRESTエンドポイント
-- **エラーハンドリング**: 適切な例外処理とレスポンス
-- **データベース**: H2インメモリデータベース
+## 🔑 セットアップ手順
 
-## 🛠️ 技術スタック
+### 1. GitHub Personal Access Tokenの作成
+
+1. **Personal Access Tokenの作成**
+   - GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+   - Generate new token (classic) をクリック
+   - 必要なスコープ:
+     - ✅ `repo` (Full control of private repositories)
+     - ✅ `project` (Full control of projects)
+
+2. **Repository Secretへの登録**
+   - このリポジトリ → Settings → Secrets and variables → Actions
+   - New repository secret
+   - Name: `TEAM_SETUP_TOKEN`
+   - Secret: 作成したトークンを貼り付け
+
+### 2. 自動セットアップの実行
+[![🚀 Team Setup](https://img.shields.io/badge/🚀_Team_Setup_v3.0-Click_to_Start-success?style=for-the-badge&logo=github)](../../actions/workflows/team-setup.yml)
+
+1. 上記の「🚀 Team Setup」ボタンをクリック
+2. `Run workflow` ボタンをクリックして実行
+3. [Actions](../../actions) タブで進行状況を確認
+4. 全セットアップが完了するまで待つ
+
+### 3. 手動セットアップ
+1. イマココSNS（KPT）のstatusをKPT用に変更する
+- 変更前：Todo, In Progress, Done
+- 変更後：Keep, Problem, Try, Done
+
+## 🛠️ 開発環境
+
+### 技術スタック
 
 - **フレームワーク**: Spring Boot 3.2.0
-- **Javaバージョン**: Java 17
 - **データベース**: H2 Database (インメモリ)
 - **ビルドツール**: Maven
 - **コンテナ**: Docker
-- **セキュリティ**: Spring Security, BCrypt
 
-## 🚀 実行方法
+### 実行方法
 
 ```bash
 # Docker Compose で起動
@@ -31,38 +55,29 @@ mvn spring-boot:run
 
 アクセス: http://localhost:8080
 
-## 📝 APIエンドポイント
+## 🔧 トラブルシューティング
 
-### ユーザー管理
-- `GET /api/users` - 全ユーザー取得
-- `GET /api/users/{id}` - ユーザー取得
-- `POST /api/users` - ユーザー作成
-- `PUT /api/users/{id}` - ユーザー更新
-- `DELETE /api/users/{id}` - ユーザー削除
-- `GET /api/users/search?name={name}` - ユーザー検索
+### 古いエラーが出る場合（v3.0移行後）
+もし以下のエラーメッセージが表示される場合:
+- `⚠️ Limiting to first 50 test issues to avoid rate limits`
+- `⚠️ Limiting to first 30 issues for project addition`
+- Wikiの Python indentation エラー
 
-### 認証
-- `POST /api/users/login` - ログイン
-- `POST /api/users/{id}/change-password` - パスワード変更
+**これは古いコードが実行されている証拠です。**
 
-## 🔒 セキュリティ機能
+### 解決手順
+```bash
+# 1. 環境をクリーンアップ
+python scripts/cleanup_force_refresh.py
 
-- BCryptによるパスワードハッシュ化
-- 環境変数による設定管理
-- パスワード強度チェック（大文字、小文字、数字、特殊文字必須）
-- 適切なエラーハンドリング
+# 2. 環境を確認
+python scripts/verify_environment.py
 
-## 📋 プロジェクト管理機能
+# 3. ワークフローを手動実行
+# GitHub Actions タブで「🚀 Team Development Setup v3.0 (CONSOLIDATED)」を実行
+```
 
-このリポジトリにはGitHub Actionsを使用したプロジェクト管理機能が含まれています。
+## 📝 参考資料
 
-### 自動セットアップワークフロー
-`.github/workflows/team-setup.yml` により、以下を自動生成できます：
-- GitHub Projects
-- Issues
-- Discussions
-- Wikiページ
-
-## 📝 ライセンス
-
-MIT License
+- [チーム開発説明資料](https://docs.google.com/presentation/d/1XO9Ru_5e85g63vwidmGGKmOZdUMKjqPG/edit?slide=id.p1#slide=id.p1)
+- [Figma デザイン](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/イマココSNS)
