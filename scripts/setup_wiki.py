@@ -75,120 +75,91 @@ def generate_table_design() -> str:
     
     return content
 
-def generate_wiki_content(wiki_path: str = 'wiki'):
-    """Wikiページのコンテンツを生成"""
-    print("📚 Generating Wiki content...")
+def generate_wiki_content(source_wiki_path: str = 'wiki', output_wiki_path: str = 'wiki'):
+    """Wikiページのコンテンツを生成（/wikiディレクトリから読み込み）"""
+    print("📚 Generating Wiki content from source directory...")
     
-    # Wikiディレクトリの作成
     try:
-        os.makedirs(wiki_path, exist_ok=True)
-        print(f"📂 Wiki directory created/verified: {wiki_path}")
+        # ソースディレクトリの確認
+        if not os.path.exists(source_wiki_path):
+            print(f"⚠️ Source wiki directory not found: {source_wiki_path}")
+            print(f"📝 No wiki pages will be generated.")
+            return True
         
-        # 1. HOMEページ
-        github_repo_link = f"[GitHub リポジトリ](https://github.com/{GITHUB_REPOSITORY})"
-        issues_link = f"[Issues](https://github.com/{GITHUB_REPOSITORY}/issues)"
-        projects_link = f"[Projects](https://github.com/{GITHUB_REPOSITORY}/projects)"
-        discussions_link = f"[Discussions](https://github.com/{GITHUB_REPOSITORY}/discussions)"
-        timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+        # 出力ディレクトリの作成（必要に応じて）
+        if source_wiki_path != output_wiki_path:
+            os.makedirs(output_wiki_path, exist_ok=True)
+            print(f"📂 Output directory created/verified: {output_wiki_path}")
         
-        home_content = f"""# イマココSNS Wiki
-
-イマココSNS開発プロジェクトのWikiページです。
-
-## 📋 ドキュメント一覧
-
-- [[テーブル設計書]] - データベース設計の詳細
-- [[ルール]] - チーム開発のルールとガイドライン
-- [[キックオフ]] - プロジェクト開始情報
-
-## 🔗 関連リンク
-
-- {github_repo_link}
-- {issues_link}
-- {projects_link}
-- {discussions_link}
-
-## 📝 参考資料
-
-- [Figma デザイン](https://www.figma.com/file/l8Zzw1wPJBitm0bQMNXTdB/イマココSNS)
-- [GitHub ベースリポジトリ](https://github.com/prum-jp/imakoko-base)
-
----
-
-*このWikiは GitHub Actions により自動生成されています*  
-*最終更新: {timestamp}*
-"""
+        # /wikiディレクトリから.mdファイルを読み込み
+        md_files = [f for f in os.listdir(source_wiki_path) if f.endswith('.md')]
         
-        # 2. テーブル設計書
-        table_design_content = generate_table_design()
+        if not md_files:
+            print(f"⚠️ No markdown files found in: {source_wiki_path}")
+            return True
         
-        # 3. ルールページ（空）
-        rules_content = f"""# ルール
-
-チーム開発のルールとガイドラインをここに記載します。
-
-## 開発ルール
-
-*ここに開発ルールを記載してください*
-
-## コミットルール
-
-*ここにコミットルールを記載してください*
-
-## レビュールール
-
-*ここにレビュールールを記載してください*
-
----
-
-*最終更新: {time.strftime('%Y-%m-%d %H:%M:%S')}*
-"""
+        print(f"📁 Found {len(md_files)} markdown files in {source_wiki_path}")
         
-        # 4. キックオフページ（空）
-        kickoff_content = f"""# キックオフ
-
-プロジェクトキックオフの資料をここに記載します。
-
-## プロジェクト概要
-
-*ここにプロジェクト概要を記載してください*
-
-## 開発スケジュール
-
-*ここに開発スケジュールを記載してください*
-
-## 役割分担
-
-*ここに役割分担を記載してください*
-
----
-
-*最終更新: {time.strftime('%Y-%m-%d %H:%M:%S')}*
-"""
+        generated_count = 0
+        for filename in md_files:
+            source_path = os.path.join(source_wiki_path, filename)
+            
+            # テーブル設計書.mdの特別処理
+            if filename == 'テーブル設計書.md':
+                # ファイルが存在するがほぼ空の場合、CSVから生成
+                try:
+                    with open(source_path, 'r', encoding='utf-8') as f:
+                        existing_content = f.read().strip()
+                    
+                    # ファイルが空またはプレースホルダーのみの場合
+                    if len(existing_content) < 100 or 'ここにテーブル設計' in existing_content:
+                        print(f"  📊 Generating table design from CSV for: {filename}")
+                        content = generate_table_design()
+                    else:
+                        # 既存のコンテンツを使用
+                        content = existing_content
+                        print(f"  📖 Using existing content for: {filename}")
+                except Exception as e:
+                    print(f"  ⚠️ Error reading {filename}, generating from CSV: {str(e)}")
+                    content = generate_table_design()
+            else:
+                # その他のファイルはそのまま読み込み
+                try:
+                    with open(source_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    print(f"  📖 Read content from: {filename}")
+                except Exception as e:
+                    print(f"  ❌ Failed to read {filename}: {str(e)}")
+                    continue
+            
+            # 出力先にファイルを書き込み（source != outputの場合のみ）
+            if source_wiki_path != output_wiki_path:
+                output_path = os.path.join(output_wiki_path, filename)
+                try:
+                    with open(output_path, 'w', encoding='utf-8') as f:
+                        f.write(content)
+                    print(f"  ✅ Copied to output: {filename}")
+                    generated_count += 1
+                except Exception as e:
+                    print(f"  ❌ Failed to write {filename}: {str(e)}")
+                    continue
+            else:
+                # 同じディレクトリの場合、テーブル設計書のみ更新の可能性あり
+                if filename == 'テーブル設計書.md' and content != existing_content:
+                    try:
+                        with open(source_path, 'w', encoding='utf-8') as f:
+                            f.write(content)
+                        print(f"  ✅ Updated: {filename}")
+                    except Exception as e:
+                        print(f"  ❌ Failed to update {filename}: {str(e)}")
+                generated_count += 1
         
-        # ファイルに書き込み
-        pages = {
-            'Home.md': home_content,
-            'テーブル設計書.md': table_design_content,
-            'ルール.md': rules_content,
-            'キックオフ.md': kickoff_content
-        }
-        
-        for filename, content in pages.items():
-            file_path = os.path.join(wiki_path, filename)
-            try:
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    f.write(content)
-                print(f"  ✅ Generated: {filename}")
-            except Exception as e:
-                print(f"  ❌ Failed to write {filename}: {str(e)}")
-                continue
-        
-        print(f"📂 Wiki content generated in: {wiki_path}")
-        print("📌 Generated pages:")
-        for filename in pages.keys():
-            if os.path.exists(os.path.join(wiki_path, filename)):
-                print(f"  • {filename}")
+        if source_wiki_path != output_wiki_path:
+            print(f"\n📂 Wiki content copied to: {output_wiki_path}")
+            print(f"📌 Processed {generated_count} pages")
+        else:
+            print(f"\n📂 Wiki content verified in: {source_wiki_path}")
+            print(f"📌 Found {generated_count} pages")
         
         return True
         
@@ -215,35 +186,36 @@ Wiki生成中にエラーが発生しました。手動でページを作成し�
             print(f"  ❌ Fallback also failed: {str(fallback_error)}")
             return False
 
-def verify_wiki_content():
+def verify_wiki_content(wiki_path: str = 'wiki'):
     """生成されたWikiコンテンツを検証"""
-    wiki_path = 'wiki'
-    expected_files = ['Home.md', 'テーブル設計書.md', 'ルール.md', 'キックオフ.md']
-    
-    print("🔍 Verifying generated Wiki content...")
+    print("🔍 Verifying Wiki content...")
     
     if not os.path.exists(wiki_path):
-        print(f"❌ Wiki directory not found: {wiki_path}")
-        return False
+        print(f"⚠️ Wiki directory not found: {wiki_path}")
+        print(f"📝 This is expected if no wiki files exist in the source.")
+        return True  # Not an error if no wiki files exist
     
-    missing_files = []
-    for filename in expected_files:
+    # 実際に存在するmdファイルをチェック
+    md_files = [f for f in os.listdir(wiki_path) if f.endswith('.md')]
+    
+    if not md_files:
+        print(f"⚠️ No markdown files found in: {wiki_path}")
+        return True  # Not an error if no files exist
+    
+    print(f"📋 Found {len(md_files)} markdown files:")
+    
+    for filename in md_files:
         file_path = os.path.join(wiki_path, filename)
-        if not os.path.exists(file_path):
-            missing_files.append(filename)
+        file_size = os.path.getsize(file_path)
+        
+        if file_size < 10:  # 10バイト未満は空ファイルとみなす
+            print(f"  ⚠️ {filename}: Empty file ({file_size} bytes)")
+        elif file_size < 100:  # 100バイト未満は内容不足の可能性
+            print(f"  ⚠️ {filename}: Small file ({file_size} bytes)")
         else:
-            # ファイルサイズもチェック
-            file_size = os.path.getsize(file_path)
-            if file_size < 100:  # 100バイト未満は内容不足の可能性
-                print(f"⚠️ {filename}: Small file size ({file_size} bytes)")
-            else:
-                print(f"✅ {filename}: OK ({file_size} bytes)")
+            print(f"  ✅ {filename}: OK ({file_size} bytes)")
     
-    if missing_files:
-        print(f"❌ Missing files: {', '.join(missing_files)}")
-        return False
-    
-    print("✅ All Wiki files verified successfully")
+    print(f"\n✅ Wiki verification completed")
     return True
 
 def main():
@@ -266,20 +238,25 @@ def main():
             
             if verification_success:
                 print(f"\n✨ Wiki setup completed successfully!")
-                print(f"📌 Generated wiki pages ready for Git operations")
-                print(f"\n📋 Generated files:")
-                wiki_files = os.listdir('wiki') if os.path.exists('wiki') else []
-                for file in sorted(wiki_files):
-                    print(f"  • {file}")
+                
+                wiki_files = [f for f in os.listdir('wiki') if f.endswith('.md')] if os.path.exists('wiki') else []
+                if wiki_files:
+                    print(f"📌 Wiki pages ready for Git operations")
+                    print(f"\n📋 Processed files:")
+                    for file in sorted(wiki_files):
+                        print(f"  • {file}")
                     
-                print(f"\n💡 Note: Wiki pages will be committed and pushed by GitHub Actions workflow")
-                print(f"\n🔗 Wiki will be available at:")
-                print(f"  https://github.com/{GITHUB_REPOSITORY}/wiki")
+                    print(f"\n💡 Note: Wiki pages will be committed and pushed by GitHub Actions workflow")
+                    print(f"\n🔗 Wiki will be available at:")
+                    print(f"  https://github.com/{GITHUB_REPOSITORY}/wiki")
+                else:
+                    print(f"📌 No wiki pages found to process")
+                    print(f"💡 Add markdown files to /wiki directory to include them in the wiki")
+                
                 return 0
             else:
-                print(f"\n⚠️ Wiki setup completed with issues!")
-                print(f"📌 Some content may be missing or incomplete")
-                return 1
+                print(f"\n⚠️ Wiki setup completed with warnings")
+                return 0  # Not a failure if verification has warnings
         else:
             print(f"\n❌ Wiki setup failed!")
             return 1
