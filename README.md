@@ -14,6 +14,7 @@
    - 必要なスコープ:
      - ✅ `repo` (Full control of private repositories)
      - ✅ `project` (Full control of projects)
+     - ✅ `write:discussion` (Read and write team discussions)
 
 2. **Repository Secretへの登録**
    - このリポジトリ → Settings → Secrets and variables → Actions
